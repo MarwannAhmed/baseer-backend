@@ -3,7 +3,6 @@ import pickle
 
 import cv2
 from collections import defaultdict
-from datetime import datetime
 import numpy as np
 from textblob import TextBlob
 
