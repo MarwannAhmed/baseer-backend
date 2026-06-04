@@ -1,9 +1,9 @@
 from pathlib import Path
 
 # ── Root paths ──────────────────────────────────────────────────────────────
-ROOT_DIR     = Path(__file__).resolve().parent.parent
+ROOT_DIR     = Path(__file__).resolve().parent.parent.parent.parent
 DATA_DIR     = ROOT_DIR / "data"
-MODELS_DIR   = ROOT_DIR / "models"
+MODELS_DIR   = ROOT_DIR / "models" / "arabic-ocr"
 OUTPUT_DIR   = ROOT_DIR / "output"
 PREPROCESS_DIR = OUTPUT_DIR / "preprocess"
 SEGMENT_DIR  = OUTPUT_DIR / "segment"
