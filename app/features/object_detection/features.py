@@ -1,109 +1,87 @@
-"""
-features.py — Combined Feature Extraction
-==========================================
-Implements the three-part feature descriptor used by this detector:
-
-  1. HOG  (Histogram of Oriented Gradients)
-  2. Dense SIFT-inspired gradient histograms
-  3. Canny edge density map
-
-Final feature vector = concat(HOG, SIFT-inspired, Canny)
-"""
-
 import numpy as np
 import cv2
 from skimage.feature import hog
 
-from app.features.object_detection import config
-
-
-def _to_gray(patch):
-    """Convert BGR or grayscale patch to float32 grayscale."""
-    if len(patch.shape) == 3 and patch.shape[2] == 3:
-        return cv2.cvtColor(patch, cv2.COLOR_BGR2GRAY).astype(np.float32)
-    return patch.astype(np.float32)
-
-
-def extract_hog_features(patch):
-    gray = _to_gray(patch)
-    gray = np.sqrt(gray / 255.0)
+def hog_feature(grayscale_patch):
+    grayscale_patch = np.sqrt(grayscale_patch / 255.0)
     features = hog(
-        gray,
-        orientations=config.HOG_ORIENTATIONS,
-        pixels_per_cell=config.HOG_PIXELS_PER_CELL,
-        cells_per_block=config.HOG_CELLS_PER_BLOCK,
-        block_norm=config.HOG_BLOCK_NORM,
+        grayscale_patch,
+        orientations=9,
+        pixels_per_cell=(8, 8),
+        cells_per_block=(2, 2),
+        block_norm="L2-Hys",
         feature_vector=True,
         channel_axis=None,
     )
     return features.astype(np.float32)
 
+def sift_descriptor_feature(grayscale_patch):
+    x_gradient = cv2.Sobel(grayscale_patch, cv2.CV_32F, 1, 0, ksize=1)
+    y_gradient = cv2.Sobel(grayscale_patch, cv2.CV_32F, 0, 1, ksize=1)
+    magnitude = np.sqrt(x_gradient ** 2 + y_gradient ** 2)
+    orientation = np.arctan2(np.abs(y_gradient), np.abs(x_gradient)) * (180.0 / np.pi)
 
-def extract_sift_inspired_features(patch):
-    gray      = _to_gray(patch)
-    gx        = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=1)
-    gy        = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=1)
-    magnitude = np.sqrt(gx ** 2 + gy ** 2)
-    angle     = np.arctan2(np.abs(gy), np.abs(gx)) * (180.0 / np.pi)
+    grid_size = 4
+    bins = 8
 
-    h, w = gray.shape
-    gs   = config.SIFT_GRID_SIZE
-    nb   = config.SIFT_BINS
-    ch   = h // gs
-    cw   = w // gs
+    height, width = grayscale_patch.shape
+    cell_height = height // grid_size
+    cell_width = width // grid_size
 
     features = []
-    for i in range(gs):
-        for j in range(gs):
-            y1, y2     = i * ch, (i + 1) * ch
-            x1, x2     = j * cw, (j + 1) * cw
-            cell_mag   = magnitude[y1:y2, x1:x2]
-            cell_angle = angle[y1:y2, x1:x2]
-            gauss      = cv2.getGaussianKernel(ch, ch / 2.0) * \
-                         cv2.getGaussianKernel(cw, cw / 2.0).T
-            gauss      = gauss / (gauss.max() + 1e-8)
-            cell_mag   = cell_mag * gauss
-            hist, _    = np.histogram(
-                cell_angle.ravel(), bins=nb, range=(0.0, 90.0),
-                weights=cell_mag.ravel(),
+    for row in range(grid_size):
+        for column in range(grid_size):
+            x_start = column * cell_width
+            y_start = row * cell_height
+            x_end = (column + 1) * cell_width
+            y_end = (row + 1) * cell_height
+
+            cell_magnitude   = magnitude[y_start:y_end, x_start:x_end]
+            cell_orientation = orientation[y_start:y_end, x_start:x_end]
+            gauss = cv2.getGaussianKernel(cell_height, cell_height / 2.0) * cv2.getGaussianKernel(cell_width, cell_width / 2.0).T
+            gauss = gauss / (gauss.max() + 1e-8)
+            cell_magnitude = cell_magnitude * gauss
+            histogram, _ = np.histogram(
+                cell_orientation.ravel(), bins=bins, range=(0.0, 90.0),
+                weights=cell_magnitude.ravel(),
             )
-            norm = np.linalg.norm(hist) + 1e-8
-            hist = hist / norm
-            hist = np.clip(hist, 0.0, 0.2)
-            hist = hist / (np.linalg.norm(hist) + 1e-8)
-            features.extend(hist)
+
+            histogram = histogram / (np.linalg.norm(histogram) + 1e-8)
+            histogram = np.clip(histogram, 0.0, 0.2)
+            histogram = histogram / (np.linalg.norm(histogram) + 1e-8)
+
+            features.extend(histogram)
 
     return np.array(features, dtype=np.float32)
 
+def canny_edge_map_feature(grayscale_patch):
+    edges = cv2.Canny(grayscale_patch.astype(np.uint8), threshold1=50, threshold2=150)    
+    grid_size = 8
+    height, width  = edges.shape
+    cell_height    = height // grid_size
+    cell_width    = width // grid_size
 
-def extract_canny_features(patch):
-    gray  = _to_gray(patch).astype(np.uint8)
-    edges = cv2.Canny(gray, threshold1=50, threshold2=150)
-    gs    = config.CANNY_GRID_SIZE
-    h, w  = edges.shape
-    ch    = h // gs
-    cw    = w // gs
     features = []
-    for i in range(gs):
-        for j in range(gs):
-            cell    = edges[i*ch:(i+1)*ch, j*cw:(j+1)*cw]
-            density = float(np.mean(cell > 0))
-            features.append(density)
+    for row in range(grid_size):
+        for column in range(grid_size):
+            x_start = column * cell_width
+            y_start = row * cell_height
+            x_end = (column + 1) * cell_width
+            y_end = (row + 1) * cell_height
+
+            cell   = edges[y_start:y_end, x_start:x_end]
+            edge_density = float(np.mean(cell > 0))
+            features.append(edge_density)
+
     return np.array(features, dtype=np.float32)
 
-
-def extract_features(patch):
-    """
-    Extract the full combined feature vector from one image patch.
-    The patch is resized to WINDOW_SIZE before extraction.
-    """
-    resized    = cv2.resize(patch, config.WINDOW_SIZE)
-    hog_feat   = extract_hog_features(resized)
-    sift_feat  = extract_sift_inspired_features(resized)
-    canny_feat = extract_canny_features(resized)
-    return np.concatenate([hog_feat, sift_feat, canny_feat]).astype(np.float32)
-
-
-def get_feature_dim():
-    dummy = np.zeros((*config.WINDOW_SIZE[::-1], 3), dtype=np.uint8)
-    return extract_features(dummy).shape[0]
+def extract_features(image_patch):
+    resized_patch = cv2.resize(image_patch, (96, 96))
+    if len(resized_patch.shape) == 3 and resized_patch.shape[2] == 3:
+        grayscale_patch = cv2.cvtColor(resized_patch, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    else:
+        grayscale_patch = resized_patch.astype(np.float32)
+    hog = hog_feature(grayscale_patch)
+    sift = sift_descriptor_feature(grayscale_patch)
+    canny = canny_edge_map_feature(grayscale_patch)
+    return np.concatenate([hog, sift, canny]).astype(np.float32)
