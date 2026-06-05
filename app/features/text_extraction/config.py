@@ -69,14 +69,14 @@ parameters = {
         "min_word_frequency": 2
     },
     "SVM": {
-        "model_path": "models/ocr/classical/SVM/classifier.pkl",
-        "scaler_path": "models/ocr/classical/SVM/scaler.pkl",
-        "encoder_path": "models/ocr/classical/SVM/encoder.pkl",
+        "model_path": "models/svm-text-en/classifier.pkl",
+        "scaler_path": "models/svm-text-en/scaler.pkl",
+        "encoder_path": "models/svm-text-en/encoder.pkl",
         "TOP_K": 5
     },
     "CNN": {
-        "model_path": "models/ocr/classical/CNN/cnn_model.pth",
-        "encoder_path": "models/ocr/classical/CNN/cnn_encoder.pkl",
+        "model_path": "models/cnn-ocr/cnn_model.pth",
+        "encoder_path": "models/cnn-ocr/cnn_encoder.pkl",
         "TOP_K": 5,
         "norm_size": 28
     },
@@ -98,6 +98,6 @@ parameters = {
 parameters_dl = {
     "unclip_ratio": 1.5,
     "line_thresh": 0.6,
-    "det_model_path": "models/ocr/PP-OCRv5_mobile_det_infer/",
-    "rec_model_path": "models/ocr/ar_PP-OCRv5_mobile_rec_infer/"
+    "det_model_path": "models/PP-OCRv5_mobile_det_infer/",
+    "rec_model_path": "models/ar_PP-OCRv5_mobile_rec_infer/"
 }
