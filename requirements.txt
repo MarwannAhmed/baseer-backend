@@ -12,3 +12,5 @@ torch
 scipy
 paddleocr==3.4.0
 paddlepaddle==3.2.2
+gunicorn
+azure-storage-blob
