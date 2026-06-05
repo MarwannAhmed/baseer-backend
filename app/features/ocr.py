@@ -8,7 +8,7 @@ _pipeline = None
 def _get_pipeline() -> ArabicOCRPipeline:
     global _pipeline
     if _pipeline is None:
-        _pipeline = ArabicOCRPipeline(classifier="cnn")
+        _pipeline = ArabicOCRPipeline(classifier="cnn", debug=True)
     return _pipeline
 
 

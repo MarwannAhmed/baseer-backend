@@ -15,6 +15,8 @@ async def analyze(
         raise HTTPException(status_code=400, detail="Empty image file")
 
     result = route_command(command=command, image_bytes=image_bytes)
-    if (command == 'كشف'): 
+    if command == "كشف":
         return {"objects": result}
+    if command == "لون":
+        return {"color": result}
     return {"description": result}

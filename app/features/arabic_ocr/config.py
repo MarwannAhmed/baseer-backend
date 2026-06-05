@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT_DIR     = Path(__file__).resolve().parent.parent.parent.parent
 DATA_DIR     = ROOT_DIR / "data"
 MODELS_DIR   = ROOT_DIR / "models" / "arabic-ocr"
-OUTPUT_DIR   = ROOT_DIR / "output"
+OUTPUT_DIR   = ROOT_DIR / "output" / "arabic-ocr-output"
 PREPROCESS_DIR = OUTPUT_DIR / "preprocess"
 SEGMENT_DIR  = OUTPUT_DIR / "segment"
 
