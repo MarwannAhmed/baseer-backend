@@ -40,26 +40,3 @@ jobs:
           tags: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DB07AC5FC3A04FAEA9F6315C5EC02130 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5A52DE6C3E4844DE9C4CC12E16B3C8DA }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_613F1EE9D12444159DC064E394B3904C }}
-
-      - name: Configure App Service Container
-        run: |
-          az webapp config container set \
-            --name $WEBAPP_NAME \
-            --resource-group baseer-rg \
-            --docker-custom-image-name ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest \
-            --docker-registry-server-url https://${{ secrets.ACR_LOGIN_SERVER }} \
-            --docker-registry-server-user ${{ secrets.ACR_USERNAME }} \
-            --docker-registry-server-password ${{ secrets.ACR_PASSWORD }}
-
-      - name: Restart App Service
-        run: |
-          az webapp restart \
-            --name $WEBAPP_NAME \
-            --resource-group baseer-rg
