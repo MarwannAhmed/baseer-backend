@@ -1,5 +1,4 @@
 from pathlib import Path
-import logging
 import os
 
 from dotenv import load_dotenv
@@ -8,26 +7,17 @@ from fastapi import FastAPI
 
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-)
-
-logger = logging.getLogger(__name__)
-logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
-
 app = FastAPI(title="Baseer Backend")
 
-logger.info("Application startup initiated")
+print("Application startup initiated")
 
-logger.info("Downloading models from Azure Blob Storage...")
+print("Downloading models from Azure Blob Storage...")
 
 connection_string = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
 blob_service_client = BlobServiceClient.from_connection_string(
     connection_string
 )
-logger.info("Connected to Azure Blob Storage")
+print("Connected to Azure Blob Storage")
 
 models = [
     "svm-text-en",
@@ -51,24 +41,22 @@ for model in models:
 
     model_dir.mkdir(parents=True, exist_ok=True)
 
-    logger.info("Processing model: %s", model)
+    print(f"Processing model: {model}")
 
     for blob in container_client.list_blobs():
         file_name = blob.name
-        logger.info("Processing file: %s", file_name)
+        print(f"Processing file: {file_name}")
 
         local_file = model_dir / file_name
 
         if local_file.exists():
-            logger.info(
-                "File %s already exists, skipping download.",
-                local_file,
+            print(
+                f"File {local_file} already exists, skipping download."
             )
             continue
 
-        logger.info(
-            "Downloading %s from Azure Blob Storage...",
-            file_name,
+        print(
+            f"Downloading {file_name} from Azure Blob Storage..."
         )
 
         blob_client = blob_service_client.get_blob_client(
@@ -79,10 +67,8 @@ for model in models:
         with open(local_file, "wb") as f:
             f.write(blob_client.download_blob().readall())
 
-        logger.info(
-            "Downloaded %s to %s",
-            file_name,
-            local_file,
+        print(
+            f"Downloaded {file_name} to {local_file}",
         )
     
 

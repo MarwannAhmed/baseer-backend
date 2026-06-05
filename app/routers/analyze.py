@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, logger
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from app.services.command_router import route_command
 
 router = APIRouter()
@@ -9,18 +9,16 @@ async def analyze(
     command: str = Form(...),
     file: UploadFile = File(...),
 ) -> dict:
-    logger.info("Received analyze request with command: %s", command)
+    print(f"Received command: {command}, file: {file.filename}")
     image_bytes = await file.read()
 
-    logger.info("Received file: %s, size: %d bytes", file.filename, len(image_bytes))
     if not image_bytes:
         raise HTTPException(status_code=400, detail="Empty image file")
-
-    logger.info("Routing command: %s", command)
+    
+    print(f"Image file size: {len(image_bytes)} bytes")
     result = route_command(command=command, image_bytes=image_bytes)
-    logger.info("Command '%s' processed with result: %s", command, result)
     if (command == 'كشف'): 
-        logger.info("Returning object detection result.")
+        print(f"Detection result: {result}")
         return {"objects": result}
-    logger.info("Returning text extraction result.")
+    print(f"Extraction result: {result}")
     return {"description": result}
