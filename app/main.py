@@ -1,15 +1,104 @@
 import sys
 from pathlib import Path
-
-# Allow `from arabic_ocr.X import Y` while the package lives inside app/features/
-sys.path.insert(0, str(Path(__file__).resolve().parent / "features"))
-
+import logging
+import os
+from dotenv import load_dotenv
+from azure.storage.blob import BlobServiceClient
 from fastapi import FastAPI
 from app.routers import analyze
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "features"))
+
+
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
+
+logger = logging.getLogger(__name__)
+logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(logging.WARNING)
 
 app = FastAPI(title="Baseer Backend")
 
 app.include_router(analyze.router)
+
+
+def download_models() -> None:
+    logger.info("Downloading models from Azure Blob Storage...")
+
+    connection_string = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+    blob_service_client = BlobServiceClient.from_connection_string(
+        connection_string
+    )
+    logger.info("Connected to Azure Blob Storage")
+
+    models = [
+        "svm-text-en",
+        "cnn-ocr",
+        "object",
+        "ar-pp-ocrv5-mobile-rec-infer",
+        "langmodel-ocr",
+        "pp-ocrv5-mobile-det-infer",
+        "langmodel-ocr-ar",
+        "cnn-ocr-ar",
+        "color-detection"
+    ]
+
+    models_dir = Path(__file__).parent.parent / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+
+    for model in models:
+        container_client = blob_service_client.get_container_client(model)
+
+        if model == "langmodel-ocr":
+            model_dir = models_dir / "ocr" / "classical" / "langmodel"
+        else:
+            model_dir = models_dir / model
+
+        model_dir.mkdir(parents=True, exist_ok=True)
+
+        logger.info("Processing model: %s", model)
+
+        for blob in container_client.list_blobs():
+            file_name = blob.name
+            logger.info("Processing file: %s", file_name)
+
+            local_file = model_dir / file_name
+
+            if local_file.exists():
+                logger.info(
+                    "File %s already exists, skipping download.",
+                    local_file,
+                )
+                continue
+
+            logger.info(
+                "Downloading %s from Azure Blob Storage...",
+                file_name,
+            )
+
+            blob_client = blob_service_client.get_blob_client(
+                container=model,
+                blob=file_name,
+            )
+
+            with open(local_file, "wb") as f:
+                f.write(blob_client.download_blob().readall())
+
+            logger.info(
+                "Downloaded %s to %s",
+                file_name,
+                local_file,
+            )
+
+
+@app.on_event("startup")
+def startup() -> None:
+    logger.info("Application startup initiated")
+    download_models()
+    
 
 @app.get("/health")
 def health() -> dict:

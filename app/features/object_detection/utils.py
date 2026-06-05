@@ -1,43 +1,57 @@
-"""
-app/features/object_detection/utils.py — Detection Helpers
-"""
-
-import os
 import numpy as np
 
-
 def compute_iou(box1, box2):
-    ix1 = max(box1[0], box2[0])
-    iy1 = max(box1[1], box2[1])
-    ix2 = min(box1[2], box2[2])
-    iy2 = min(box1[3], box2[3])
-    intersection = max(0, ix2 - ix1) * max(0, iy2 - iy1)
-    if intersection == 0:
-        return 0.0
-    area1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
-    area2 = (box2[2] - box2[0]) * (box2[3] - box2[1])
-    union = area1 + area2 - intersection
-    return intersection / union if union > 0 else 0.0
+    x_left = max(box1[0], box2[0])
+    y_top = max(box1[1], box2[1])
+    x_right = min(box1[2], box2[2])
+    y_bottom = min(box1[3], box2[3])
 
+    intersection_width = max(0, x_right - x_left)
+    intersection_height = max(0, y_bottom - y_top)
+    intersection_area = intersection_width * intersection_height
+
+    if intersection_area == 0:
+        return 0.0
+
+    area_box1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
+    area_box2 = (box2[2] - box2[0]) * (box2[3] - box2[1])
+
+    union_area = area_box1 + area_box2 - intersection_area
+
+    if union_area <= 0:
+        return 0.0
+
+    return intersection_area / union_area
 
 def non_maximum_suppression(boxes, scores, labels, iou_threshold=0.3):
-    if len(boxes) == 0:
+    if not boxes:
         return [], [], []
-    boxes  = np.array(boxes,  dtype=np.float32)
+
+    boxes = np.array(boxes, dtype=np.float32)
     scores = np.array(scores, dtype=np.float32)
     labels = np.array(labels, dtype=np.int32)
-    order  = np.argsort(scores)[::-1]
-    keep   = []
-    while len(order) > 0:
-        best = order[0]
-        keep.append(best)
-        if len(order) == 1:
+
+    sorted_indices = np.argsort(scores)[::-1]
+    kept_indices = []
+
+    while len(sorted_indices) > 0:
+        best_index = sorted_indices[0]
+        kept_indices.append(best_index)
+
+        if len(sorted_indices) == 1:
             break
-        rest = order[1:]
-        ious = np.array([compute_iou(boxes[best], boxes[j]) for j in rest])
-        order = rest[ious < iou_threshold]
-    return boxes[keep].tolist(), scores[keep].tolist(), labels[keep].tolist()
 
+        remaining_indices = sorted_indices[1:]
 
-def ensure_dir(path):
-    os.makedirs(path, exist_ok=True)
+        ious = np.array([
+            compute_iou(boxes[best_index], boxes[index])
+            for index in remaining_indices
+        ])
+
+        sorted_indices = remaining_indices[ious < iou_threshold]
+
+    return (
+        boxes[kept_indices].tolist(),
+        scores[kept_indices].tolist(),
+        labels[kept_indices].tolist(),
+    )

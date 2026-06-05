@@ -1,13 +1,15 @@
 from app.features.object_detection import handle as detect_objects
-from app.features.ocr import handle as extract_text
+from app.features.ocr import handle as extract_text_ocr
 from app.features.color_detection import handle as detect_color
-
-# ── Register commands here ────────────────────────────────────────────────────
+from app.features.text_extraction import handle as extract_text
+from app.features.arabic_ocr import handle as extract_text_ocr_ar
 
 COMMAND_MAP: dict = {
     "كشف": detect_objects,
     "نص":  extract_text,
     "لون": detect_color,
+    "نصا": extract_text_ocr,
+    "نصعر": extract_text_ocr_ar,
 }
 
 def route_command(command: str, image_bytes: bytes):
