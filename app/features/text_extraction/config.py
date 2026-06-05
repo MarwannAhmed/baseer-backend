@@ -98,6 +98,6 @@ parameters = {
 parameters_dl = {
     "unclip_ratio": 1.5,
     "line_thresh": 0.6,
-    "det_model_path": "models/PP-OCRv5_mobile_det_infer/",
-    "rec_model_path": "models/ar_PP-OCRv5_mobile_rec_infer/"
+    "det_model_path": "models/pp-ocrv5_mobile_det_infer/",
+    "rec_model_path": "models/ar_pp-ocrv5_mobile_rec_infer/"
 }

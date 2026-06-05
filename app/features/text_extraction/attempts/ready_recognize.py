@@ -3,7 +3,7 @@ os.environ["PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK"] = "True"
 
 from paddleocr import TextRecognition
 
-REC_MODEL_DIR = "models/PP-OCRv5_mobile_rec_infer"
+REC_MODEL_DIR = "models/pp-ocrv5_mobile_rec_infer"
 MIN_CONFIDENCE = 0.7
 
 
