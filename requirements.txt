@@ -12,3 +12,6 @@ torchvision
 scipy
 arabic-reshaper
 python-bidi
+Pillow
+pytest
+mahotas

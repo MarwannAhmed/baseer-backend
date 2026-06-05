@@ -1,22 +1,12 @@
 import numpy as np
-
+import math
 from arabic_ocr.config import NORM_SIZE
+import mahotas
 
 
-def zernike_features(norm_img: np.ndarray, degree: int = 8) -> np.ndarray:
-    """Zernike moment descriptors up to the given degree (~45 features at degree=8).
-
-    Rotation-invariant shape descriptors.
-    Paper: Khotanzad & Hong, IEEE TPAMI 1990.
-    Arabic relevance: discriminates rotationally similar letters (و vs ر).
-
-    Uses mahotas if available, falls back to a manual implementation.
-    """
+def zernike_features(norm_img: np.ndarray, degree: int = 8):
     try:
-        import mahotas
         radius = NORM_SIZE // 2
-        # mahotas.features.zernike_moments expects a binary image and works on
-        # the magnitude of the moments
         feats = mahotas.features.zernike_moments(
             (norm_img < 128).astype(np.uint8), radius=radius, degree=degree
         )
@@ -25,23 +15,20 @@ def zernike_features(norm_img: np.ndarray, degree: int = 8) -> np.ndarray:
         return _zernike_manual(norm_img, degree)
 
 
-# ── Manual Zernike implementation (no mahotas dependency) ───────────────────
 
-def _zernike_manual(img: np.ndarray, degree: int) -> np.ndarray:
-    """Pure-NumPy Zernike moments (magnitude only)."""
+def _zernike_manual(img: np.ndarray, degree: int):
     binary = (img < 128).astype(float)
-    h, w = binary.shape
-
-    # Map pixel coordinates to unit disk
-    y_idx, x_idx = np.indices((h, w))
-    x_norm = (x_idx - w / 2.0) / (w / 2.0)
-    y_norm = (y_idx - h / 2.0) / (h / 2.0)
+    height, width = binary.shape
+    y_index, x_index = np.indices((height, width))
+    x_norm = (x_index - width / 2.0) / (width / 2.0)
+    y_norm = (y_index - height / 2.0) / (height / 2.0)
     rho   = np.hypot(x_norm, y_norm)
     theta = np.arctan2(y_norm, x_norm)
 
-    inside = rho <= 1.0
+    inside = rho <= 1.0 #which pixels are inside unit circle, only those contribute to Zernike moments
     moments: list[float] = []
 
+    #multiplies with the basis function and sums (projecton onto that basis)
     for n in range(degree + 1):
         for m in range(-n, n + 1):
             if (n - abs(m)) % 2 != 0:
@@ -50,32 +37,22 @@ def _zernike_manual(img: np.ndarray, degree: int) -> np.ndarray:
             V = R * np.exp(1j * m * theta)
             Z = np.sum(binary[inside] * np.conj(V[inside]))
             Z *= (n + 1) / np.pi
-            moments.append(abs(Z))
+            moments.append(abs(Z)) 
 
     return np.array(moments, dtype=np.float32)
 
-
-def _radial_poly(n: int, m: int, rho: np.ndarray) -> np.ndarray:
-    """Zernike radial polynomial R_n^m(rho)."""
+def _radial_poly(n: int, m: int, rho: np.ndarray):
     result = np.zeros_like(rho)
     for s in range((n - m) // 2 + 1):
         coeff = (
             ((-1) ** s)
-            * _factorial(n - s)
+            * math.factorial(n - s)
             / (
-                _factorial(s)
-                * _factorial((n + m) // 2 - s)
-                * _factorial((n - m) // 2 - s)
+                math.factorial(s)
+                * math.factorial((n + m) // 2 - s)
+                * math.factorial((n - m) // 2 - s)
             )
         )
         result += coeff * rho ** (n - 2 * s)
     return result
 
-
-def _factorial(n: int) -> int:
-    if n <= 1:
-        return 1
-    r = 1
-    for i in range(2, n + 1):
-        r *= i
-    return r

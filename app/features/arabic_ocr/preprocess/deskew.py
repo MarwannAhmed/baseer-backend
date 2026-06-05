@@ -1,32 +1,15 @@
 import cv2
 import numpy as np
-
 from arabic_ocr.config import SKEW_ANGLE_MAX
 
 
-def deskew(binary: np.ndarray) -> tuple[np.ndarray, float]:
-    """Rotate the binary image to correct text skew.
+def deskew(binary):
+    height, width = binary.shape
 
-    Two-method strategy:
-      1. Projection profile — finds the rotation angle that maximises the
-         variance of horizontal ink projections.  Reliable for pages with
-         multiple text lines and unaffected by dark scanner borders.
-      2. Min-area bounding box fallback — used only when the projection
-         method cannot find a confident angle (sparse text, single line).
-
-    Dark scanner borders distort the bounding-box approach because the border
-    pixels pull the foreground cloud toward a ±45° rectangle.  The projection
-    method works on the interior text and is immune to this artefact.
-
-    Returns (corrected_image, angle_degrees).
-    """
-    h, w = binary.shape
-
-    # Strip outer 2% of the image to exclude scanner border artefacts before
-    # falling back to the bounding-box method.
-    margin_h = max(1, int(h * 0.02))
-    margin_w = max(1, int(w * 0.02))
-    interior = binary[margin_h: h - margin_h, margin_w: w - margin_w]
+    # Strip outer 2% of the image to exclude scanner border artefacts
+    margin_height = max(1, int(height * 0.02))
+    margin_width = max(1, int(width * 0.02))
+    interior = binary[margin_height: height - margin_height, margin_width: width - margin_width]
 
     angle = _projection_skew(interior)
     if angle is None:
@@ -34,32 +17,24 @@ def deskew(binary: np.ndarray) -> tuple[np.ndarray, float]:
     if angle is None:
         return binary.copy(), 0.0
 
-    center = (w / 2, h / 2)
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    center = (width / 2, height / 2)
+    M = cv2.getRotationMatrix2D(center, angle, 1.0) #to rotate around center point
     rotated = cv2.warpAffine(
-        binary, M, (w, h),
+        binary, M, (width, height),
         flags=cv2.INTER_NEAREST,
         borderMode=cv2.BORDER_CONSTANT,
-        borderValue=255,
+        borderValue=255, #fill new corners with white
     )
     return rotated, float(angle)
 
 
-def _projection_skew(binary: np.ndarray, angle_range: float = 15.0) -> float | None:
-    """Estimate skew by maximising horizontal-projection variance.
+def _projection_skew(binary, angle_range = 15.0):
 
-    Sweeps angles in [-angle_range, +angle_range] in 0.5° steps and returns
-    the angle whose rotated image has the highest row-projection variance
-    (well-aligned text has sharp alternating dark/light rows).
-
-    Returns None when the winning variance is not significantly better than the
-    0° baseline (image is already straight, or too sparse to judge).
-    """
-    h, w = binary.shape
+    height, width = binary.shape
     if np.sum(binary == 0) < 50:
         return None
 
-    center = (w / 2, h / 2)
+    center = (width / 2, height / 2)
     best_angle = 0.0
     best_var = _row_proj_var(binary)
     baseline_var = best_var
@@ -70,7 +45,7 @@ def _projection_skew(binary: np.ndarray, angle_range: float = 15.0) -> float | N
             continue
         M = cv2.getRotationMatrix2D(center, angle, 1.0)
         rotated = cv2.warpAffine(
-            binary, M, (w, h),
+            binary, M, (width, height),
             flags=cv2.INTER_NEAREST,
             borderMode=cv2.BORDER_CONSTANT,
             borderValue=255,
@@ -80,7 +55,7 @@ def _projection_skew(binary: np.ndarray, angle_range: float = 15.0) -> float | N
             best_var = var
             best_angle = angle
 
-    # Only apply correction when variance improvement is meaningful (>5%)
+    # Only apply correction when variance improvement is meaningful (>5%) (this is to avoid microcorrection on straight imgs)
     if best_var < baseline_var * 1.05:
         return 0.0
     if abs(best_angle) > SKEW_ANGLE_MAX:
@@ -88,13 +63,12 @@ def _projection_skew(binary: np.ndarray, angle_range: float = 15.0) -> float | N
     return best_angle
 
 
-def _row_proj_var(binary: np.ndarray) -> float:
-    proj = np.sum(binary == 0, axis=1).astype(float)
-    return float(np.var(proj))
+def _row_proj_var(binary):
+    _projection_skew = np.sum(binary == 0, axis=1).astype(float)
+    return float(np.var(_projection_skew))
 
 
-def _bbox_skew(binary: np.ndarray) -> float | None:
-    """Min-area bounding-box skew estimate (original method, border-stripped)."""
+def _bbox_skew(binary):
     coords = np.column_stack(np.where(binary == 0))
     if len(coords) < 10:
         return None

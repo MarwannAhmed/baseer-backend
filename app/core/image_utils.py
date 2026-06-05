@@ -14,6 +14,8 @@ def decode_image(image_bytes: bytes):
     -------
     np.ndarray  BGR image, or None if decoding failed
     """
+    if not image_bytes:
+        return None
     nparr = np.frombuffer(image_bytes, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     return image

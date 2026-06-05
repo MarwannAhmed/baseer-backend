@@ -1,12 +1,10 @@
 """Arabic-specific utilities: alphabet, dot mapping, text normalisation, HMDB labels."""
 import unicodedata
 
-# ── Alphabet ──────────────────────────────────────────────────────────────────
 ARABIC_LETTERS: list[str] = list(
     "ابتثجحخدذرزسشصضطظعغفقكلمنهوي"
 )
 
-# ── Dot map ───────────────────────────────────────────────────────────────────
 # Maps (body_class, dot_count_above, dot_count_below) → final Unicode character.
 # Classifiers are trained on body classes (fewer classes → better accuracy).
 # dot_features() provides the dot counts; this map reconstructs the full letter.
@@ -60,7 +58,6 @@ DOT_MAP: dict[tuple[str, int, int], str] = {
     ("kaf",  0, 0): "ك",
 }
 
-# ── HMDB folder name → Unicode ────────────────────────────────────────────────
 # Maps LetterName_Position folder names (used in HMDB and similar printed-text
 # datasets) to their Unicode representation.
 #
@@ -82,175 +79,146 @@ DOT_MAP: dict[tuple[str, int, int], str] = {
 #   ذ = Thal
 #   ظ = Dhaa
 HMDB_TO_UNICODE: dict[str, str] = {
-    # ── Alef  ا ──────────────────────────────────────────────────────────────
     "Alef_Isolated": "ا",
     "Alef_Start":    "اـ",
     "Alef_Middle":   "ـاـ",
     "Alef_End":      "ـا",
 
-    # ── Baa  ب ───────────────────────────────────────────────────────────────
     "Baa_Isolated": "ب",
     "Baa_Start":    "بـ",
     "Baa_Middle":   "ـبـ",
     "Baa_End":      "ـب",
 
-    # ── Taa  ت ───────────────────────────────────────────────────────────────
     "Taa_Isolated": "ت",
     "Taa_Start":    "تـ",
     "Taa_Middle":   "ـتـ",
     "Taa_End":      "ـت",
 
-    # ── Thaa  ث ──────────────────────────────────────────────────────────────
     "Thaa_Isolated": "ث",
     "Thaa_Start":    "ثـ",
     "Thaa_Middle":   "ـثـ",
     "Thaa_End":      "ـث",
 
-    # ── Jeem  ج ──────────────────────────────────────────────────────────────
     "Jeem_Isolated": "ج",
     "Jeem_Start":    "جـ",
     "Jeem_Middle":   "ـجـ",
     "Jeem_End":      "ـج",
 
-    # ── Haa  ح (pharyngeal) ───────────────────────────────────────────────────
     "Haa_Isolated": "ح",
     "Haa_Start":    "حـ",
     "Haa_Middle":   "ـحـ",
     "Haa_End":      "ـح",
 
-    # ── Khaa  خ ──────────────────────────────────────────────────────────────
     "Khaa_Isolated": "خ",
     "Khaa_Start":    "خـ",
     "Khaa_Middle":   "ـخـ",
     "Khaa_End":      "ـخ",
 
-    # ── Dal  د ───────────────────────────────────────────────────────────────
     "Dal_Isolated": "د",
     "Dal_Start":    "دـ",
     "Dal_Middle":   "ـدـ",
     "Dal_End":      "ـد",
 
-    # ── Thal  ذ ──────────────────────────────────────────────────────────────
     "Thal_Isolated": "ذ",
     "Thal_Start":    "ذـ",
     "Thal_Middle":   "ـذـ",
     "Thal_End":      "ـذ",
 
-    # ── Raa  ر ───────────────────────────────────────────────────────────────
     "Raa_Isolated": "ر",
     "Raa_Start":    "رـ",
     "Raa_Middle":   "ـرـ",
     "Raa_End":      "ـر",
 
-    # ── Zain  ز ──────────────────────────────────────────────────────────────
     "Zain_Isolated": "ز",
     "Zain_Start":    "زـ",
     "Zain_Middle":   "ـزـ",
     "Zain_End":      "ـز",
 
-    # ── Seen  س ──────────────────────────────────────────────────────────────
     "Seen_Isolated": "س",
     "Seen_Start":    "سـ",
     "Seen_Middle":   "ـسـ",
     "Seen_End":      "ـس",
 
-    # ── Sheen  ش ─────────────────────────────────────────────────────────────
     "Sheen_Isolated": "ش",
     "Sheen_Start":    "شـ",
     "Sheen_Middle":   "ـشـ",
     "Sheen_End":      "ـش",
 
-    # ── Saad  ص ──────────────────────────────────────────────────────────────
     "Saad_Isolated": "ص",
     "Saad_Start":    "صـ",
     "Saad_Middle":   "ـصـ",
     "Saad_End":      "ـص",
 
-    # ── Daad  ض ──────────────────────────────────────────────────────────────
     "Daad_Isolated": "ض",
     "Daad_Start":    "ضـ",
     "Daad_Middle":   "ـضـ",
     "Daad_End":      "ـض",
 
-    # ── Ttaa  ط (emphatic T) ──────────────────────────────────────────────────
     "Ttaa_Isolated": "ط",
     "Ttaa_Start":    "طـ",
     "Ttaa_Middle":   "ـطـ",
     "Ttaa_End":      "ـط",
 
-    # ── Dhaa  ظ ──────────────────────────────────────────────────────────────
     "Dhaa_Isolated": "ظ",
     "Dhaa_Start":    "ظـ",
     "Dhaa_Middle":   "ـظـ",
     "Dhaa_End":      "ـظ",
 
-    # ── Ain  ع ───────────────────────────────────────────────────────────────
     "Ain_Isolated": "ع",
     "Ain_Start":    "عـ",
     "Ain_Middle":   "ـعـ",
     "Ain_End":      "ـع",
 
-    # ── Ghain  غ ─────────────────────────────────────────────────────────────
     "Ghain_Isolated": "غ",
     "Ghain_Start":    "غـ",
     "Ghain_Middle":   "ـغـ",
     "Ghain_End":      "ـغ",
 
-    # ── Faa  ف ───────────────────────────────────────────────────────────────
     "Faa_Isolated": "ف",
     "Faa_Start":    "فـ",
     "Faa_Middle":   "ـفـ",
     "Faa_End":      "ـف",
 
-    # ── Qaaf  ق ──────────────────────────────────────────────────────────────
     "Qaaf_Isolated": "ق",
     "Qaaf_Start":    "قـ",
     "Qaaf_Middle":   "ـقـ",
     "Qaaf_End":      "ـق",
 
-    # ── Kaf  ك ───────────────────────────────────────────────────────────────
     "Kaf_Isolated": "ك",
     "Kaf_Start":    "كـ",
     "Kaf_Middle":   "ـكـ",
     "Kaf_End":      "ـك",
 
-    # ── Lam  ل ───────────────────────────────────────────────────────────────
     "Lam_Isolated": "ل",
     "Lam_Start":    "لـ",
     "Lam_Middle":   "ـلـ",
     "Lam_End":      "ـل",
 
-    # ── Meem  م ──────────────────────────────────────────────────────────────
     "Meem_Isolated": "م",
     "Meem_Start":    "مـ",
     "Meem_Middle":   "ـمـ",
     "Meem_End":      "ـم",
 
-    # ── Noon  ن ──────────────────────────────────────────────────────────────
     "Noon_Isolated": "ن",
     "Noon_Start":    "نـ",
     "Noon_Middle":   "ـنـ",
     "Noon_End":      "ـن",
 
-    # ── Heh  ه (glottal) ─────────────────────────────────────────────────────
     "Heh_Isolated": "ه",
     "Heh_Start":    "هـ",
     "Heh_Middle":   "ـهـ",
     "Heh_End":      "ـه",
 
-    # ── Waw  و ───────────────────────────────────────────────────────────────
     "Waw_Isolated": "و",
     "Waw_Start":    "وـ",
     "Waw_Middle":   "ـوـ",
     "Waw_End":      "ـو",
 
-    # ── Yaa  ي ───────────────────────────────────────────────────────────────
     "Yaa_Isolated": "ي",
     "Yaa_Start":    "يـ",
     "Yaa_Middle":   "ـيـ",
     "Yaa_End":      "ـي",
 
-    # ── Special characters ───────────────────────────────────────────────────
     # Hamza  ء  (only appears isolated)
     "Hamza_Isolated":            "ء",
     "Hamza_Above_Isolated":      "ء",
@@ -279,7 +247,7 @@ HMDB_TO_UNICODE: dict[str, str] = {
     "Yeh_Hamza_Middle":          "ـئـ",
     "Yeh_Hamza_End":             "ـئ",
 
-    # Teh Marbuta  ة  (word-final only; also some datasets have _Isolated)
+    # Teh Marbuta  ة  (word-final only, but position suffixes still used in labels for consistency)
     "Teh_Marbuta_Isolated":      "ة",
     "Teh_Marbuta_End":           "ة",
     "Ta_Marbuta_Isolated":       "ة",
@@ -301,31 +269,24 @@ HMDB_TO_UNICODE: dict[str, str] = {
     "Lam_Alf_Hamza_Isolated":    "لأ",
     "Lam_Alf_Hamza_End":         "لأ",
 
-    # ── Arabic-Indic digits ───────────────────────────────────────────────────
-    # Digit labels used in HMDB-style datasets (English word → Arabic-Indic digit)
     "Zero":  "٠",  "One":   "١",  "Two":   "٢",  "Three": "٣",  "Four":  "٤",
     "Five":  "٥",  "Six":   "٦",  "Seven": "٧",  "Eight": "٨",  "Nine":  "٩",
-    # Also handle numeric string labels (some datasets use "0"-"9")
+
     "0": "٠", "1": "١", "2": "٢", "3": "٣", "4": "٤",
     "5": "٥", "6": "٦", "7": "٧", "8": "٨", "9": "٩",
 }
 
-# ── HMDB letter-name aliases ──────────────────────────────────────────────────
-# Different Arabic OCR datasets use slightly different transliterations.
-# This table maps alternative spellings to the canonical name used above,
-# so HMDB_TO_UNICODE works regardless of which convention the training data used.
 _LETTER_ALIASES: dict[str, str] = {
-    # ── Standard shorter forms ────────────────────────────────────────────────
     "Ba":    "Baa",    # ب
     "Ta":    "Taa",    # ت
     "Tha":   "Thaa",   # ث
-    "Gem":   "Jeem",   # ج (Egyptian G)
+    "Gem":   "Jeem",   # ج 
     "Gen":   "Ghain",  # غ
     "Ha":    "Haa",    # ح
     "Kha":   "Khaa",   # خ
     "Tha":   "Thaa",   # ث
     "Jim":   "Jeem",   # ج
-    "Ha":    "Heh",    # ه (glottal H; Ha_* and Haa_* are separate classes in this dataset)
+    "Ha":    "Heh",    # ه ( Ha_* and Haa_* are separate classes in this dataset)
     "Kha":   "Khaa",   # خ
     "Dhal":  "Thal",   # ذ
     "Ra":    "Raa",    # ر
@@ -342,21 +303,21 @@ _LETTER_ALIASES: dict[str, str] = {
     "Nun":   "Noon",   # ن
     "Ya":    "Yaa",    # ي
     "Ye":    "Yaa",    # ي
-    # ── Dataset-specific spellings seen in the wild ───────────────────────────
-    "Alf":    "Alef",  # ا — "Alf" used in some Egyptian datasets
-    "Zal":    "Thal",  # ذ — "Zal" (Zain+Alef) is a common alt. transliteration
+
+    "Alf":    "Alef",  # ا 
+    "Zal":    "Thal",  # ذ 
     "Gen":    "Ghain", # غ
-    "Geem":   "Jeem",  # ج — same reason
-    "Kha":    "Khaa",  # خ — already above, kept for clarity
+    "Geem":   "Jeem",  # ج 
+    "Kha":    "Khaa",  # خ
     "Dha":    "Dhaa",  # ظ
-    "Tah":    "Ttaa",  # ط — already above
-    "Yeh":    "Yaa",   # ي — "Yeh" used in Unicode standard names
+    "Tah":    "Ttaa",  # ط
+    "Yeh":    "Yaa",   # ي
     "Non":    "Noon",  # ن
-    "Wow":    "Waw",   # و — informal spelling
+    "Wow":    "Waw",   # و 
     "Kef":    "Kaf",   # ك
     "Laam":   "Lam",   # ل
-    "Mim":    "Meem",  # م — already above
-    # ── This dataset's specific spellings ────────────────────────────────────
+    "Mim":    "Meem",  # م
+
     "Gem":           "Jeem",             # ج — variant of Gen
     "Shen":          "Sheen",            # ش
     "Zin":           "Zain",             # ز
@@ -373,9 +334,7 @@ for _alias, _canonical in _LETTER_ALIASES.items():
         if _ak not in HMDB_TO_UNICODE and _ck in HMDB_TO_UNICODE:
             HMDB_TO_UNICODE[_ak] = HMDB_TO_UNICODE[_ck]
 
-# ── Dot count map ─────────────────────────────────────────────────────────────
-# Maps HMDB letter base-name (label before last "_Position") to
-# (dots_above, dots_below). Used by filter_candidates_by_dots().
+# this'll be used by filter_candidates_by_dots().
 _LETTER_DOT_COUNTS: dict[str, tuple[int, int]] = {
     # 0 dots
     "Alef": (0, 0), "Ain": (0, 0), "Dal": (0, 0), "Haa": (0, 0),
@@ -416,10 +375,8 @@ for _a, _c in _DOT_COUNT_ALIASES.items():
     if _a not in _LETTER_DOT_COUNTS and _c in _LETTER_DOT_COUNTS:
         _LETTER_DOT_COUNTS[_a] = _LETTER_DOT_COUNTS[_c]
 
-# ── Position-suffix maps ──────────────────────────────────────────────────────
-# Maps CharCrop.position tag → HMDB folder suffix.
-# Used by filter_candidates_by_position() to restrict inference to the
-# correct positional-form classes when trained on Option-A HMDB labels.
+# this'll be used by filter_candidates_by_position() to restrict inference to the
+# correct positional-form classes when trained on HMDB labels.
 HMDB_POSITION_MAP: dict[str, str] = {
     "isolated": "Isolated",
     "initial":  "Start",
@@ -433,7 +390,6 @@ HMDB_SUFFIX_TO_POSITION: dict[str, str] = {v: k for k, v in HMDB_POSITION_MAP.it
 
 def hmdb_label_to_unicode(folder_name: str) -> str:
     """Convert an HMDB folder name to its Unicode label.
-
     Returns an empty string for unknown folder names.
     Example: "Ain_Start" → "عـ"
     """
@@ -445,7 +401,6 @@ def filter_candidates_by_position(
     position: str,
 ) -> list[tuple[str, float]]:
     """Keep only candidates whose HMDB label matches the character's position.
-
     When the classifier is trained on Option-A HMDB labels (LetterName_Position),
     each prediction string looks like "Ain_Start".  This filter restricts the
     top-K list to entries that end with the correct suffix, giving a free
@@ -500,9 +455,8 @@ def filter_candidates_by_dots(
     return filtered if filtered else candidates
 
 
-# ── Text utilities ─────────────────────────────────────────────────────────────
 
-def normalize_arabic(text: str) -> str:
+def normalize_arabic(text):
     """Strip harakat (diacritics) and normalise Unicode for lexicon matching."""
     stripped = "".join(
         ch for ch in text
@@ -511,14 +465,13 @@ def normalize_arabic(text: str) -> str:
     return unicodedata.normalize("NFC", stripped)
 
 
-def is_arabic_char(ch: str) -> bool:
+def is_arabic_char(ch):
     """True if the character falls in the Arabic Unicode block U+0600–U+06FF."""
     return 0x0600 <= ord(ch) <= 0x06FF
 
 
-def join_text_rtl(words: list[str]) -> str:
+def join_text_rtl(words):
     """Join Arabic words with U+200F RIGHT-TO-LEFT MARK for correct bidi display.
-
     Always wrap the result in arabic-reshaper + python-bidi when rendering
     in PIL or matplotlib — this function handles plain string joining only.
     """

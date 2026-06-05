@@ -3,30 +3,13 @@ import numpy as np
 from arabic_ocr.config import BIGRAM_WEIGHT
 
 
-def beam_search_decode(
-    candidates_per_position: list[list[tuple[str, float]]],
-    lm,
-    beam_width: int = 5,
-    return_beams: bool = False,
-) -> list[str]:
-    """Beam search decoding over per-position top-K candidate lists.
+def beam_search_decode(candidates_per_position, lm, beam_width = 5, return_beams = False):
 
-    More efficient than Viterbi for long sequences: keeps only the top
-    beam_width hypotheses at each step rather than the full trellis.
-
-    Args:
-        candidates_per_position: list of [(char, prob), ...] per position.
-        lm: ArabicLanguageModel with ._bigram_score() method.
-        beam_width: number of hypotheses to keep at each step.
-
-    Returns:
-        Best character sequence as list of strings.
-    """
     if not candidates_per_position:
         return []
 
     # Each beam: (accumulated_log_score, [chars_so_far])
-    beams: list[tuple[float, list[str]]] = [(0.0, [])]
+    beams = [(0.0, [])]
 
     for candidates in candidates_per_position:
         new_beams: list[tuple[float, list[str]]] = []
@@ -35,7 +18,7 @@ def beam_search_decode(
             for char, prob in candidates:
                 log_emit = np.log(max(prob, 1e-9))
 
-                if path:
+                if path and lm is not None:
                     prev = path[-1]
                     bigram_p = lm.bigrams.get(prev, {}).get(char, 1e-6)
                     lm_score = np.log(bigram_p) * BIGRAM_WEIGHT

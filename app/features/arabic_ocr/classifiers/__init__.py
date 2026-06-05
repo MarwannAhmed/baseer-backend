@@ -1,5 +1,4 @@
 from pathlib import Path
-
 from arabic_ocr.config import MODELS_DIR
 from .base import BaseClassifier
 from .svm_classifier import SVMClassifier
@@ -12,13 +11,7 @@ _REGISTRY = {
     "cnn": (CNNClassifier, MODELS_DIR / "cnn" / "model.pt"),
 }
 
-
 def get_classifier(name: str) -> BaseClassifier:
-    """Instantiate and load a saved classifier by name ('svm' | 'rf' | 'cnn').
-
-    If no saved model file exists the classifier is returned untrained —
-    callers are responsible for checking.
-    """
     name = name.lower()
     if name not in _REGISTRY:
         raise ValueError(f"Unknown classifier '{name}'. Choose from: {list(_REGISTRY)}")
@@ -30,5 +23,4 @@ def get_classifier(name: str) -> BaseClassifier:
     return clf
 
 
-__all__ = ["BaseClassifier", "SVMClassifier", "RFClassifier", "CNNClassifier",
-           "get_classifier"]
+__all__ = ["BaseClassifier", "SVMClassifier", "RFClassifier", "CNNClassifier","get_classifier"]
