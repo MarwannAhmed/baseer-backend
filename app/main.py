@@ -98,7 +98,3 @@ def startup() -> None:
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
-
-@app.get("/hello")
-def hello():
-    return {"message": "Hello, World!"}
