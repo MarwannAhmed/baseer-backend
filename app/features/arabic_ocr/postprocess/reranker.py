@@ -9,7 +9,7 @@ from arabic_ocr.utils import arabic_utils as _au
 class LearnedReranker:
 
     def __init__(self):
-        self.model_path = Path(MODELS_DIR) / "reranker.pkl"
+        self.model_path = Path(MODELS_DIR) / "langmodel-ocr-ar" / "reranker.pkl"
         self.model = None
         if self.model_path.exists():
             try:
@@ -79,7 +79,7 @@ RERANKER = LearnedReranker()
 
 
 def save_model(model, path = None):
-    p = Path(path) if path is not None else Path(MODELS_DIR) / "reranker.pkl"
+    p = Path(path) if path is not None else Path(MODELS_DIR) / "langmodel-ocr-ar" / "reranker.pkl"
     p.parent.mkdir(parents=True, exist_ok=True)
     with open(p, "wb") as f:
         pickle.dump(model, f)

@@ -1,8 +1,6 @@
 from pathlib import Path
 import sys
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
 from app.features.arabic_ocr.utils.image_io import load_image
 from app.features.arabic_ocr.preprocess import preprocess
 from app.features.arabic_ocr.segment import segment

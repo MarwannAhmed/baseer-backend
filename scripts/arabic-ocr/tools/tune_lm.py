@@ -16,15 +16,12 @@ results = []
 for bw, db in product(bigram_weights, dawg_boosts):
     cfg.BIGRAM_WEIGHT = float(bw)
     cfg.DAWG_BOOST = float(db)
-    # run OCR
     proc = subprocess.run([
         sys.executable, "run.py", "--image", IMG, "--classifier", CLS
     ], capture_output=True, text=True)
-    # read output file
     text = ""
     if OUT_FILE.exists():
         text = OUT_FILE.read_text(encoding="utf-8")
-    # count non-Arabic characters (excluding whitespace/newline)
     non_ar = sum(1 for ch in text if ch.strip() and not (0x0600 <= ord(ch) <= 0x06FF))
     total_chars = sum(1 for ch in text if ch.strip()) or 1
     score = non_ar

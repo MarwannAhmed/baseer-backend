@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class ArabicOCRPipeline:
 
-    def __init__(self, classifier = "svm", debug = False):
+    def __init__(self, classifier = "cnn", debug = True):
         self.classifier: BaseClassifier = get_classifier(classifier)
         self.lm = ArabicLanguageModel()
         self.debug = debug

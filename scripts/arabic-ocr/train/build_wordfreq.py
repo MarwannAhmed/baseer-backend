@@ -4,7 +4,6 @@ import json
 import re
 from collections import Counter
 from pathlib import Path
-
 from app.features.arabic_ocr.config import DATA_DIR, MODELS_DIR, WORD_FREQ_TOPN, WORD_FREQ_FILE
 
 _ARABIC_RE = re.compile(r"[؀-ۿ]+")

@@ -6,9 +6,7 @@ from .rf_classifier import RFClassifier
 from .cnn_classifier import CNNClassifier
 
 _REGISTRY = {
-    "svm": (SVMClassifier, MODELS_DIR / "svm" / "classifier.pkl"),
-    "rf":  (RFClassifier,  MODELS_DIR / "rf"  / "classifier.pkl"),
-    "cnn": (CNNClassifier, MODELS_DIR / "cnn" / "model.pt"),
+    "cnn": (CNNClassifier, MODELS_DIR / "cnn-ocr-ar" / "model.pt"),
 }
 
 def get_classifier(name: str) -> BaseClassifier:

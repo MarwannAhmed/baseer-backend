@@ -15,8 +15,8 @@ class ArabicLanguageModel:
         self._dawg_root = None
         self._loaded_bigrams = False
 
-        bp = bigrams_path or MODELS_DIR / "langmodel" / "bigrams.json"
-        dp = dawg_path or MODELS_DIR / "langmodel" / "dawg.pkl"
+        bp = bigrams_path or MODELS_DIR / "langmodel-ocr-ar" / "bigrams.json"
+        dp = dawg_path or MODELS_DIR / "langmodel-ocr-ar" / "dawg.pkl"
 
         if Path(bp).exists():
             self.load_bigrams(Path(bp))
@@ -111,7 +111,10 @@ class ArabicLanguageModel:
                       f, ensure_ascii=False)
 
     def load_dawg(self, path):
-        self._dawg_root = load_dawg(path)
+        try:
+            self._dawg_root = load_dawg(path)
+        except (MemoryError, Exception):
+            self._dawg_root = None
 
     def save_dawg(self, path):
         if self._dawg_root is not None:

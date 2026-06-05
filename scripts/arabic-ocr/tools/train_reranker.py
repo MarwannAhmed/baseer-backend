@@ -1,15 +1,12 @@
 import argparse
 import pickle
 from pathlib import Path
-
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-
 from app.features.arabic_ocr.utils.image_io import load_image
 from app.features.arabic_ocr.classifiers import get_classifier
 from app.features.arabic_ocr.config import DATA_DIR, MODELS_DIR, TOP_K
 from app.features.arabic_ocr.utils import arabic_utils as _au
-
 
 def iter_char_images(data_dir):
     chars_dir = data_dir / "chars"
@@ -86,7 +83,7 @@ def main():
     model = LogisticRegression(max_iter=1000)
     model.fit(X, y)
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
-    out = Path(MODELS_DIR) / "reranker.pkl"
+    out = Path(MODELS_DIR) / "langmodel-ocr-ar" / "reranker.pkl"
     with open(out, "wb") as f:
         pickle.dump(model, f)
     print(f"Saved trained reranker to {out}")

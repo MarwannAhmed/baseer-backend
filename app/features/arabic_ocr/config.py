@@ -2,7 +2,7 @@ from pathlib import Path
 
 ROOT_DIR     = Path(__file__).resolve().parent.parent.parent.parent
 DATA_DIR     = ROOT_DIR / "data"
-MODELS_DIR   = ROOT_DIR / "models" / "arabic-ocr"
+MODELS_DIR   = ROOT_DIR / "models"
 OUTPUT_DIR   = ROOT_DIR / "output" / "arabic-ocr-output"
 PREPROCESS_DIR = OUTPUT_DIR / "preprocess"
 SEGMENT_DIR  = OUTPUT_DIR / "segment"
@@ -38,7 +38,7 @@ DAWG_BOOST    = 0.25
 # Word-frequency based rescoring
 WORD_FREQ_BOOST = 15.0   # Large boost to override bigram costs when joining PAWs
 WORD_FREQ_TOPN  = 100000
-WORD_FREQ_FILE  = MODELS_DIR / "langmodel" / "word_freq.json"
+WORD_FREQ_FILE  = MODELS_DIR / "langmodel-ocr-ar" / "word_freq.json"
 PAW_SPACE_PENALTY = 0.0 # Let word frequencies handle stitching heavily
 
 # Dot re-ranking hyperparameters (used at runtime; tuneable)

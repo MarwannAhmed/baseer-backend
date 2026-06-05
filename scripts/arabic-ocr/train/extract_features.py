@@ -4,7 +4,6 @@ import cv2
 import numpy as np
 from app.features.arabic_ocr.features import extract
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", required=True, help="Root of labelled image tree")

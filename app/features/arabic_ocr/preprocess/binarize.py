@@ -14,9 +14,9 @@ def binarize(gray):
 
 
     binary = None
-    for k in (0.24, 0.32, 0.40, 0.48): 
-        threshold_sauvola = threshold_sauvola(blurred, window_size=win, k=k)
-        candidate = (blurred < threshold_sauvola).astype(np.uint8) * 255  
+    for k in (0.24, 0.32, 0.40, 0.48):
+        thresh = threshold_sauvola(blurred, window_size=win, k=k)
+        candidate = (blurred < thresh).astype(np.uint8) * 255
         binary = candidate
         if np.mean(candidate == 0) <= 0.10: 
             break

@@ -1,8 +1,6 @@
 import argparse
 from pathlib import Path
-
 import numpy as np
-
 from app.features.arabic_ocr.utils.image_io import load_image, resize_if_large
 from app.features.arabic_ocr.pipeline import ArabicOCRPipeline
 from app.features.arabic_ocr.segment import segment, CharCrop

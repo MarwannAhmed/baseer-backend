@@ -19,4 +19,9 @@ async def analyze(
         return {"objects": result}
     if command == "لون":
         return {"color": result}
-    return {"description": result}
+    if command == "نص":
+        return {"description": result}
+    if command == "نصا":
+        return {"description": result}
+    if command == "نصعر":
+        return {"description": result}

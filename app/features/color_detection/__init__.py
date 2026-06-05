@@ -2,10 +2,10 @@ from pathlib import Path
 from app.core.image_utils import decode_image, resize_if_large
 from app.features.color_detection.infer_color import load_model, extract_features
 
-_MODELS_DIR = Path(__file__).resolve().parents[3] / "models" / "color_detection"
-_model, _le = load_model(str(_MODELS_DIR / "color_svm.pkl"))
+_MODELS_DIR = Path(__file__).resolve().parents[3] / "models" / "color-detection"
+_model, _le = load_model(str(_MODELS_DIR /"color_svm.pkl"))
 
-
+    
 def handle(image_bytes):
     bgr = decode_image(image_bytes)
     if bgr is None:

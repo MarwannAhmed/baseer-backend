@@ -1,20 +1,3 @@
-"""Train the Arabic language model from a Wikipedia XML dump or plain corpus.
-
-Primary input  (recommended):
-    data/corpus/arwiki-latest-pages-articles.xml.bz2
-    — stream-parsed directly; never fully decompressed into memory.
-
-Fallback inputs:
-    data/corpus/arabic_corpus.txt   — plain UTF-8 Arabic text
-    data/corpus/arabic_wordlist.txt — one Arabic word per line (supplements DAWG)
-
-Outputs:
-    models/langmodel/bigrams.json
-    models/langmodel/dawg.pkl
-
-Corpus download:
-    https://dumps.wikimedia.org/arwiki/latest/arwiki-latest-pages-articles.xml.bz2
-"""
 import argparse
 import bz2
 import json
@@ -22,27 +5,18 @@ import pickle
 import re
 from collections import defaultdict
 from pathlib import Path
-
-from arabic_ocr.config import DATA_DIR, MODELS_DIR
-from arabic_ocr.postprocess.dawg import build_dawg, save_dawg
+from app.features.arabic_ocr.config import DATA_DIR, MODELS_DIR
+from app.features.arabic_ocr.postprocess.dawg import build_dawg, save_dawg
 
 # Only Arabic script characters; excludes punctuation, digits, Latin.
 _ARABIC_RE = re.compile(r"[؀-ۿ]+")
 
-# Cap unique words kept in memory for the DAWG — Arabic Wikipedia has ~5 M
-# distinct tokens; keeping all is feasible but slows pickle serialisation.
+
 MAX_DAWG_WORDS = 500_000
 
 
-# ── Wikipedia XML streaming ───────────────────────────────────────────────────
-
-def extract_arabic_tokens(dump_path: str | Path):
-    """Yield Arabic word tokens from a bz2-compressed Wikipedia XML dump.
-
-    Streams line-by-line; never loads the full decompressed XML into memory.
-    Skips markup lines (templates, wikilinks, HTML tags).
-    """
-    skip_re = re.compile(r"^\s*[|{}\[\]<#*]")   # wiki markup / XML tags
+def extract_arabic_tokens(dump_path):
+    skip_re = re.compile(r"^\s*[|{}\[\]<#*]")  
 
     with bz2.open(str(dump_path), "rt", encoding="utf-8", errors="replace") as f:
         inside_text = False
@@ -55,29 +29,13 @@ def extract_arabic_tokens(dump_path: str | Path):
                 inside_text = False
 
 
-def extract_arabic_tokens_from_plaintext(corpus_path: str | Path):
-    """Yield Arabic word tokens from a plain UTF-8 text file."""
+def extract_arabic_tokens_from_plaintext(corpus_path):
     with open(str(corpus_path), encoding="utf-8", errors="replace") as f:
         for line in f:
             yield from _ARABIC_RE.findall(line)
 
 
-# ── Bigram building ───────────────────────────────────────────────────────────
-
-def build_bigrams_from_tokens(
-    token_iter,
-    max_dawg_words: int = MAX_DAWG_WORDS,
-    report_every: int = 1_000_000,
-) -> tuple[dict, set]:
-    """Single-pass bigram counting + unique-word collection.
-
-    Counts character bigrams *within* each Arabic word (not across word
-    boundaries), then normalises to probabilities.
-
-    Returns:
-        (bigrams_dict, unique_words_set)
-        bigrams_dict: {prev_char: {next_char: probability}}
-    """
+def build_bigrams_from_tokens(token_iter, max_dawg_words = MAX_DAWG_WORDS, report_everyt = 1_000_000):
     counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     unique_words: set[str] = set()
     total_tokens = 0
@@ -92,9 +50,9 @@ def build_bigrams_from_tokens(
         if len(unique_words) < max_dawg_words:
             unique_words.add(word)
         total_tokens += 1
-        if total_tokens % report_every == 0:
-            print(f"  … {total_tokens:,} tokens processed, "
-                  f"{len(unique_words):,} unique words")
+        # if total_tokens % report_every == 0:
+        #     print(f"  … {total_tokens:,} tokens processed, "
+        #           f"{len(unique_words):,} unique words")
 
     print(f"Total tokens: {total_tokens:,}   Unique words: {len(unique_words):,}")
 
@@ -106,8 +64,6 @@ def build_bigrams_from_tokens(
 
     return bigrams, unique_words
 
-
-# ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(
@@ -130,7 +86,7 @@ def main():
     )
     parser.add_argument(
         "--out-dir",
-        default=str(MODELS_DIR / "langmodel"),
+        default=str(MODELS_DIR / "langmodel-ocr-ar"),
         help="Output directory for bigrams.json and dawg.pkl",
     )
     parser.add_argument(
@@ -142,7 +98,6 @@ def main():
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # ── Choose token source ───────────────────────────────────────────────────
     dump_path    = Path(args.dump)
     corpus_path  = Path(args.corpus)
 
@@ -158,13 +113,11 @@ def main():
         print(f"  --corpus  {corpus_path}")
         return
 
-    # ── Single-pass: bigrams + unique words ───────────────────────────────────
     print("Building bigrams and collecting vocabulary …")
     bigrams, unique_words = build_bigrams_from_tokens(
         token_iter, max_dawg_words=args.max_dawg_words
     )
 
-    # ── Optional extra word list ──────────────────────────────────────────────
     wordlist_path = Path(args.wordlist)
     if wordlist_path.exists():
         extra = {
@@ -175,13 +128,11 @@ def main():
         unique_words.update(extra)
         print(f"Added {len(unique_words) - before:,} words from word list")
 
-    # ── Save bigrams ──────────────────────────────────────────────────────────
     bigrams_out = out_dir / "bigrams.json"
     with open(bigrams_out, "w", encoding="utf-8") as f:
         json.dump(bigrams, f, ensure_ascii=False)
     print(f"Bigrams saved  → {bigrams_out}  ({len(bigrams):,} initial chars)")
 
-    # ── Save DAWG ─────────────────────────────────────────────────────────────
     print(f"Building DAWG trie for {len(unique_words):,} words …")
     dawg_root = build_dawg(list(unique_words))
     dawg_out  = out_dir / "dawg.pkl"

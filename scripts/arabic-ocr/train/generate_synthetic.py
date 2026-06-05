@@ -1,13 +1,11 @@
 import argparse
 import random
 from pathlib import Path
-
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import arabic_reshaper
 from bidi.algorithm import get_display
-
 from app.features.arabic_ocr.config import DATA_DIR
 from app.features.arabic_ocr.features.normalize import normalize
 from app.features.arabic_ocr.utils.arabic_utils import HMDB_TO_UNICODE, hmdb_label_to_unicode
@@ -75,7 +73,6 @@ def render(unicode_text: str, font: ImageFont.FreeTypeFont, size: int) -> np.nda
 
 
 def augment(img: np.ndarray) -> np.ndarray:
-    """Simulate newspaper scan artifacts."""
     # Gaussian blur (scanner defocus)
     if random.random() < 0.5:
         k = random.choice([3, 3, 5])
@@ -137,8 +134,7 @@ def generate_class(label, unicode_text, fonts, out_dir, n_per_font):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate synthetic printed Arabic character images"
-    )
+        description="Generate synthetic printed Arabic character images")
     parser.add_argument(
         "--fonts-dir", default="C:/Windows/Fonts",
         help="Directory containing Arabic .ttf/.TTF font files",
@@ -173,7 +169,6 @@ def main():
 
     print(f"Fonts ({len(fonts)}): {[t for _, t in fonts]}\n")
 
-    # Start with all existing data/chars/ subfolders
     labels: dict[str, str] = {}
 
     if not args.missing_only:
@@ -186,7 +181,6 @@ def main():
             else:
                 print(f"  skip (no unicode mapping): {folder.name}")
 
-    # Add missing positional forms
     for label, uval in _MISSING_FORMS.items():
         if label not in labels:
             labels[label] = uval

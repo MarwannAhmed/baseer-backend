@@ -1,7 +1,6 @@
 import argparse
 import random
 from pathlib import Path
-
 import cv2
 import numpy as np
 import torch
@@ -10,14 +9,11 @@ from torch.utils.data import DataLoader, Dataset
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report
-
 from app.features.arabic_ocr.config import MODELS_DIR, DATA_DIR
 from app.features.arabic_ocr.classifiers import CNNClassifier
 from app.features.arabic_ocr.features.normalize import normalize
 from app.features.arabic_ocr.utils.arabic_utils import hmdb_label_to_unicode
 
-
-# ── Augmentation ──────────────────────────────────────────────────────────────
 
 def augment(img: np.ndarray) -> np.ndarray:
     angle = random.uniform(-10, 10)
@@ -37,14 +33,8 @@ def augment(img: np.ndarray) -> np.ndarray:
     return img
 
 
-# ── Dataset ───────────────────────────────────────────────────────────────────
 
 class HMDBCharDataset(Dataset):
-    """Loads images from LetterName_Position subfolders.
-
-    Labels are the folder names verbatim (Option A: ~112 classes).
-    The LabelEncoder maps them to integer indices for CrossEntropyLoss.
-    """
 
     def __init__(self, imgs: np.ndarray, labels: np.ndarray, train: bool = True):
         self.imgs   = imgs
@@ -63,14 +53,8 @@ class HMDBCharDataset(Dataset):
         return t, dots, torch.tensor(self.labels[idx], dtype=torch.long)
 
 
-# ── Data loading ──────────────────────────────────────────────────────────────
-
-# ── Label normalisation ───────────────────────────────────────────────────────
-# Some datasets name the same letter differently.
-# Merging these at load time prevents the model from trying to learn
-# visually-identical classes as separate outputs.
 _LABEL_MERGES: dict[str, str] = {
-    # Ta_Marbuta vs Teh_Marbuta
+    # Ta_Marbuta and Teh_Marbuta are variants
     "Ta_Marbuta_Isolated": "Teh_Marbuta_Isolated",
     "Ta_Marbuta_End":      "Teh_Marbuta_End",
     
@@ -78,18 +62,11 @@ _LABEL_MERGES: dict[str, str] = {
     "Alef_Hamza_Isolated": "Alef_Hamza_Above_Isolated",
 }
 
-
-def _normalize_label(label: str) -> str:
+def _normalize_label(label):
     return _LABEL_MERGES.get(label, label)
 
 
-def load_dataset(data_dir: Path) -> tuple[np.ndarray, list[str]]:
-    """Walk data_dir and return (normalised_image_array, label_list).
-
-    Prints a loading summary with Unicode glyphs where known.
-    Labels are normalised via _normalize_label() to merge visually-identical
-    duplicate classes.
-    """
+def load_dataset(data_dir):
     raw_imgs, ys = [], []
 
     folders = sorted(d for d in data_dir.iterdir() if d.is_dir())
@@ -122,14 +99,12 @@ def load_dataset(data_dir: Path) -> tuple[np.ndarray, list[str]]:
     return np.stack(raw_imgs), ys
 
 
-# ── Training loop ─────────────────────────────────────────────────────────────
-
 def main():
     parser = argparse.ArgumentParser(
         description="Train CNN on HMDB-style LetterName_Position folders"
     )
     parser.add_argument("--data-dir",   default=str(DATA_DIR / "chars"))
-    parser.add_argument("--out",        default=str(MODELS_DIR / "cnn" / "model.pt"))
+    parser.add_argument("--out",        default=str(MODELS_DIR / "cnn-ocr-ar" / "model.pt"))
     parser.add_argument("--epochs",     type=int,   default=40, help="Max maximum epochs")
     parser.add_argument("--target-acc", type=float, default=None, help="Target validation accuracy to stop early (e.g. 0.95)")
     parser.add_argument("--batch-size", type=int,   default=64)
@@ -181,7 +156,6 @@ def main():
     best_epoch = 0
 
     for epoch in range(1, args.epochs + 1):
-        # ── Train ────────────────────────────────────────────────────────────
         clf.model.train()
         train_loss = 0.0
         for batch_idx, (xb, db, yb) in enumerate(train_loader):
@@ -193,14 +167,12 @@ def main():
             opt.step()
             train_loss += loss.item() * len(yb)
             
-            # Print progress every 500 batches so it doesn't look frozen
             if (batch_idx + 1) % 500 == 0:
                 print(f"  Epoch {epoch} | Batch {batch_idx + 1}/{len(train_loader)} | Loss: {loss.item():.4f}")
                 
         scheduler.step()
         train_loss /= len(X_tr)
 
-        # ── Validate ─────────────────────────────────────────────────────────
         clf.model.eval()
         correct = total = 0
         all_preds, all_true = [], []
@@ -209,9 +181,8 @@ def main():
                 xb, db, yb = xb.to(device), db.to(device), yb.to(device)
                 preds = clf.model(xb, db).argmax(dim=1)
                 
-                # Move back to CPU for metrics
-                correct      += (preds == yb).sum().item()
-                total        += len(yb)
+                correct += (preds == yb).sum().item()
+                total += len(yb)
                 all_preds.extend(preds.cpu().numpy())
                 all_true.extend(yb.cpu().numpy())
 
@@ -230,7 +201,6 @@ def main():
 
     print(f"\nBest val accuracy: {best_acc:.4f} at epoch {best_epoch}")
 
-    # ── Per-class report on the validation set ────────────────────────────────
     print("\n── Per-class report (validation set) ────────────────────────────────")
     present_indices = sorted(set(all_true))
     present_labels  = enc.classes_[present_indices]
