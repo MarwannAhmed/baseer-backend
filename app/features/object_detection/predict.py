@@ -11,7 +11,7 @@ from app.core.image_utils import decode_image, resize_if_large
 
 def load_models():
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    models_folder = os.path.join(root, "models")
+    models_folder = os.path.join(root, "models/object")
     class_labels = ["person", "bottle", "chair", "dining table", "handbag"]
 
     models = {}

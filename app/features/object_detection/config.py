@@ -2,7 +2,7 @@ import os
 
 _HERE         = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(_HERE)))
-MODELS_DIR    = os.path.join(_PROJECT_ROOT, "models")
+MODELS_DIR    = os.path.join(_PROJECT_ROOT, "models/object")
 
 # training
 COCO_ROOT       = "coco"
