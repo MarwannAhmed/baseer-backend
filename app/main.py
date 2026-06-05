@@ -5,7 +5,6 @@ import os
 from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
 from fastapi import FastAPI
-from app.routers import analyze
 
 load_dotenv()
 
@@ -20,80 +19,76 @@ logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(l
 
 app = FastAPI(title="Baseer Backend")
 
-app.include_router(analyze.router)
+logger.info("Application startup initiated")
 
+logger.info("Downloading models from Azure Blob Storage...")
 
-def download_models() -> None:
-    logger.info("Downloading models from Azure Blob Storage...")
+connection_string = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+blob_service_client = BlobServiceClient.from_connection_string(
+    connection_string
+)
+logger.info("Connected to Azure Blob Storage")
 
-    connection_string = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
-    blob_service_client = BlobServiceClient.from_connection_string(
-        connection_string
-    )
-    logger.info("Connected to Azure Blob Storage")
+models = [
+    "svm-text-en",
+    "cnn-ocr",
+    "object",
+    "ar-pp-ocrv5-mobile-rec-infer",
+    "langmodel-ocr",
+    "pp-ocrv5-mobile-det-infer"
+]
 
-    models = [
-        "svm-text-en",
-        "cnn-ocr",
-        "object",
-        "ar-pp-ocrv5-mobile-rec-infer",
-        "langmodel-ocr",
-        "pp-ocrv5-mobile-det-infer"
-    ]
+models_dir = Path(__file__).parent.parent / "models"
+models_dir.mkdir(parents=True, exist_ok=True)
 
-    models_dir = Path(__file__).parent.parent / "models"
-    models_dir.mkdir(parents=True, exist_ok=True)
+for model in models:
+    container_client = blob_service_client.get_container_client(model)
 
-    for model in models:
-        container_client = blob_service_client.get_container_client(model)
+    if model == "langmodel-ocr":
+        model_dir = models_dir / "ocr" / "classical" / "langmodel"
+    else:
+        model_dir = models_dir / model
 
-        if model == "langmodel-ocr":
-            model_dir = models_dir / "ocr" / "classical" / "langmodel"
-        else:
-            model_dir = models_dir / model
+    model_dir.mkdir(parents=True, exist_ok=True)
 
-        model_dir.mkdir(parents=True, exist_ok=True)
+    logger.info("Processing model: %s", model)
 
-        logger.info("Processing model: %s", model)
+    for blob in container_client.list_blobs():
+        file_name = blob.name
+        logger.info("Processing file: %s", file_name)
 
-        for blob in container_client.list_blobs():
-            file_name = blob.name
-            logger.info("Processing file: %s", file_name)
+        local_file = model_dir / file_name
 
-            local_file = model_dir / file_name
-
-            if local_file.exists():
-                logger.info(
-                    "File %s already exists, skipping download.",
-                    local_file,
-                )
-                continue
-
+        if local_file.exists():
             logger.info(
-                "Downloading %s from Azure Blob Storage...",
-                file_name,
-            )
-
-            blob_client = blob_service_client.get_blob_client(
-                container=model,
-                blob=file_name,
-            )
-
-            with open(local_file, "wb") as f:
-                f.write(blob_client.download_blob().readall())
-
-            logger.info(
-                "Downloaded %s to %s",
-                file_name,
+                "File %s already exists, skipping download.",
                 local_file,
             )
+            continue
 
+        logger.info(
+            "Downloading %s from Azure Blob Storage...",
+            file_name,
+        )
 
-@app.on_event("startup")
-def startup() -> None:
-    logger.info("Application startup initiated")
-    download_models()
+        blob_client = blob_service_client.get_blob_client(
+            container=model,
+            blob=file_name,
+        )
+
+        with open(local_file, "wb") as f:
+            f.write(blob_client.download_blob().readall())
+
+        logger.info(
+            "Downloaded %s to %s",
+            file_name,
+            local_file,
+        )
     
+
+from app.routers import analyze
+app.include_router(analyze.router)
+
 
 @app.get("/health")
 def health() -> dict:
