@@ -4,10 +4,13 @@ import os
 from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
 from fastapi import FastAPI
+from app.routers import analyze
 
 load_dotenv()
 
 app = FastAPI(title="Baseer Backend")
+
+app.include_router(analyze.router)
 
 def download_models() -> None:
     print("Downloading models from Azure Blob Storage...")
