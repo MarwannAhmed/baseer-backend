@@ -7,9 +7,15 @@ opencv-contrib-python-headless
 scikit-learn
 scikit-image
 joblib
-textblob
 torch
+torchvision
 scipy
+arabic-reshaper
+python-bidi
+Pillow
+pytest
+mahotas
+textblob
 paddleocr==3.4.0
 paddlepaddle==3.2.2
 gunicorn
