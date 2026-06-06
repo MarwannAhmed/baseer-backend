@@ -6,8 +6,8 @@ from sklearn.svm import LinearSVC
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from features import extract_batch
-from config import MODELS_DIR, MODEL_PATH, SCALER_PATH, ENCODER_PATH
+from app.features.text_extraction.utils.features import extract_batch
+from app.features.text_extraction.config import MODELS_DIR, MODEL_PATH, SCALER_PATH, ENCODER_PATH
 
 CHARS74K_PATH = "data/chars74k/EnglishFnt/"
 SYNTHETIC_PATH = "data/synthetic_chars/"
