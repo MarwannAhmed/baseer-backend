@@ -24,17 +24,16 @@ def _denoise(gray):
     return cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
 
 def _normalize_background(gray, strength=0.7):
-    small    = cv2.resize(gray, (gray.shape[1] // 8, gray.shape[0] // 8),
-                          interpolation=cv2.INTER_AREA)
-    sigma    = small.shape[0] // 7
+    small = cv2.resize(gray, (gray.shape[1] // 8, gray.shape[0] // 8), interpolation=cv2.INTER_AREA)
+    sigma = small.shape[0] // 7
     if sigma % 2 == 0:
         sigma += 1
     bg_small = cv2.GaussianBlur(small, (0, 0), sigma)
-    bg       = cv2.resize(bg_small, (gray.shape[1], gray.shape[0]),
+    bg = cv2.resize(bg_small, (gray.shape[1], gray.shape[0]),
                           interpolation=cv2.INTER_LINEAR)
-    bg       = np.clip(bg, 1, 255).astype(np.float32)
-    norm     = cv2.divide(gray.astype(np.float32), bg, scale=255)
-    norm     = np.clip(norm, 0, 255).astype(np.float32)
+    bg = np.clip(bg, 1, 255).astype(np.float32)
+    norm = cv2.divide(gray.astype(np.float32), bg, scale=255)
+    norm = np.clip(norm, 0, 255).astype(np.float32)
     blended  = cv2.addWeighted(norm, strength, gray.astype(np.float32), 1.0 - strength, 0)
     return np.clip(blended, 0, 255).astype(np.uint8)
 
@@ -42,14 +41,7 @@ def _binarize(gray):
     block_size = max(11, (gray.shape[0] // 100) | 1)
     if block_size % 2 == 0:
         block_size += 1
-    adaptive = cv2.adaptiveThreshold(
-        gray,
-        maxValue=255,
-        adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        thresholdType=cv2.THRESH_BINARY,
-        blockSize=block_size,
-        C=15,
-    )
+    adaptive = cv2.adaptiveThreshold( gray, maxValue=255, adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C, thresholdType=cv2.THRESH_BINARY, blockSize=block_size, C=15)
     _, otsu = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     combined = cv2.bitwise_and(adaptive, otsu)
     return combined

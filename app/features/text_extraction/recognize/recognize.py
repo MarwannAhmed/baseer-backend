@@ -76,17 +76,13 @@ def _search_all_combinations_with_merge(dawg, augmented_candidates, locked_mask,
         char, conf = augmented_candidates[pos][0]
         if _is_valid_prefix(dawg, current + char):
             current_confidences.append(conf)
-            _search_all_combinations_with_merge(dawg, augmented_candidates, locked_mask,
-                                                current + char, pos + 1, all_matches, current_confidences,
-                                                word_id, depth + 1)
+            _search_all_combinations_with_merge(dawg, augmented_candidates, locked_mask, current + char, pos + 1, all_matches, current_confidences, word_id, depth + 1)
             current_confidences.pop()
     else:
         for idx, (char, conf) in enumerate(augmented_candidates[pos]):
             if _is_valid_prefix(dawg, current + char):
                 current_confidences.append(conf)
-                _search_all_combinations_with_merge(dawg, augmented_candidates, locked_mask,
-                                                    current + char, pos + 1, all_matches, current_confidences,
-                                                    word_id, depth + 1)
+                _search_all_combinations_with_merge(dawg, augmented_candidates, locked_mask, current + char, pos + 1, all_matches, current_confidences, word_id, depth + 1)
                 current_confidences.pop()
 
 

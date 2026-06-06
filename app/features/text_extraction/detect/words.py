@@ -67,12 +67,12 @@ def _group_blobs_into_words(blobs, threshold):
 
 def detect_words(binary, ls, le, ah):
     strip_inv = 255 - binary[ls:le, :]
-    blobs     = _extract_blobs(strip_inv, ah)
+    blobs = _extract_blobs(strip_inv, ah)
 
     if not blobs:
         return []
 
     threshold = _estimate_word_gap_threshold(blobs, ah)
-    words     = _group_blobs_into_words(blobs, threshold)
+    words= _group_blobs_into_words(blobs, threshold)
 
     return [(x1, ls + y1, x2, ls + y2) for x1, y1, x2, y2 in words]

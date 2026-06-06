@@ -37,8 +37,8 @@ def detect(binary, save_output=False, frame_number=0):
         cv2.rectangle(vis, (0, ls), (img_w - 1, le), (255, 100, 0), 2)
 
         for ax1, ay1, ax2, ay2 in words:
-            w    = ax2 - ax1
-            h    = ay2 - ay1
+            w = ax2 - ax1
+            h = ay2 - ay1
             area = w * h
 
             if not _is_valid_word(w, h, area, median_h):

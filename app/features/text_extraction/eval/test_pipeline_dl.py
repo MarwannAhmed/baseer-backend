@@ -12,7 +12,7 @@ def main():
         image_id = f"page_{img_idx + 1:03d}"
         if not os.path.exists(f"data/test/synthetic/images/{image_id}.png"):
             continue
-        img      = cv2.imread(f"data/test/synthetic/images/{image_id}.png")
+        img = cv2.imread(f"data/test/synthetic/images/{image_id}.png")
         res = infer(img)
 
         with open(os.path.join(RESULTS_DIR, f"{image_id}.txt"), "w", encoding="utf-8") as f:

@@ -20,7 +20,6 @@ class CNNClassifier:
         self._model.eval()
     
     def _normalize(self, char_img):
-        """Resize and center the character image to fixed size"""
         h, w = char_img.shape
         if h == 0 or w == 0:
             return np.ones((parameters["CNN"]["norm_size"], parameters["CNN"]["norm_size"]), dtype=np.float32) * 255
@@ -38,7 +37,6 @@ class CNNClassifier:
         return canvas
     
     def _preprocess(self, char_img):
-        """Preprocess single image for CNN input"""
         norm = self._normalize(char_img)
         tensor = torch.FloatTensor(norm).unsqueeze(0).unsqueeze(0) / 255.0
         return tensor.to(self._device)
@@ -57,7 +55,6 @@ class CNNClassifier:
         return candidates[0]
     
     def predict_batch(self, char_imgs):
-        """Process batch of images with different sizes"""
         normalized = []
         for img in char_imgs:
             norm = self._normalize(img)
