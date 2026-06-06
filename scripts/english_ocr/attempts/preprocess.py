@@ -3,8 +3,8 @@ import numpy as np
 from skimage.filters import threshold_sauvola
 
 from config import PREPROCESS_DIR
-from enhance import enhance
-from filter import filter
+from scripts.english_ocr.attempts.enhance import enhance
+from scripts.english_ocr.attempts.filter import filter
 from orient import orient
 
 

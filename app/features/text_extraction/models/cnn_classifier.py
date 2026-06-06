@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 from app.features.text_extraction.config import parameters
-from app.features.text_extraction.train.train_cnn import CNN
+from scripts.english_ocr.train.train_cnn import CNN
 
 
 class CNNClassifier:
