@@ -29,9 +29,9 @@ def detect_lines(binary, ah=None):
     if not components:
         return [], ah
 
-    h_img  = binary.shape[0]
-    votes  = np.zeros(h_img, dtype=float)
-    sigma  = ah * parameters["lines"]["kde_bandwidth"]
+    h_img = binary.shape[0]
+    votes = np.zeros(h_img, dtype=float)
+    sigma = ah * parameters["lines"]["kde_bandwidth"]
 
     for cy, _, _ in components:
         votes[int(np.clip(cy, 0, h_img - 1))] += 1.0
@@ -47,13 +47,13 @@ def detect_lines(binary, ah=None):
     if len(peaks) == 0:
         return [], ah
 
-    max_dist  = ah * parameters["lines"]["max_assign_dist"]
-    groups    = {p: [] for p in peaks}
-    orphans   = []
+    max_dist= ah * parameters["lines"]["max_assign_dist"]
+    groups = {p: [] for p in peaks}
+    orphans = []
 
     for comp in components:
         cy, y1, y2 = comp
-        dists      = np.abs(peaks - cy)
+        dists = np.abs(peaks - cy)
         nearest_i  = int(np.argmin(dists))
         if dists[nearest_i] <= max_dist:
             groups[peaks[nearest_i]].append(comp)

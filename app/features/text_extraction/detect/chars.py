@@ -5,10 +5,10 @@ from app.features.text_extraction.config import parameters
 
 
 def _cut_candidates(blob_inv, midpoint_radius=4):
-    fg            = (blob_inv > 0).astype(np.uint8)
-    dist          = cv2.distanceTransform(fg, cv2.DIST_L2, 3)
+    fg = (blob_inv > 0).astype(np.uint8)
+    dist = cv2.distanceTransform(fg, cv2.DIST_L2, 3)
     col_thickness = dist.max(axis=0)
-    w             = col_thickness.shape[0]
+    w = col_thickness.shape[0]
 
     valleys = []
     if col_thickness.max() > 0:
@@ -18,16 +18,13 @@ def _cut_candidates(blob_inv, midpoint_radius=4):
                    and norm[x] <= norm[x - 1]
                    and norm[x] <= norm[x + 1]]
 
-    mid         = w // 2
-    q1          = w // 4
-    q3          = (3 * w) // 4
+    mid= w // 2
+    q1 = w // 4
+    q3 = (3 * w) // 4
     
-    mid_window  = [x for x in range(mid - midpoint_radius, mid + midpoint_radius + 1)
-                   if 1 <= x <= w - 1]
-    q1_window   = [x for x in range(q1 - midpoint_radius, q1 + midpoint_radius + 1)
-                   if 1 <= x <= w - 1]
-    q3_window   = [x for x in range(q3 - midpoint_radius, q3 + midpoint_radius + 1)
-                   if 1 <= x <= w - 1]
+    mid_window = [x for x in range(mid - midpoint_radius, mid + midpoint_radius + 1) if 1 <= x <= w - 1]
+    q1_window = [x for x in range(q1 - midpoint_radius, q1 + midpoint_radius + 1) if 1 <= x <= w - 1]
+    q3_window = [x for x in range(q3 - midpoint_radius, q3 + midpoint_radius + 1) if 1 <= x <= w - 1]
 
     return sorted(set(valleys + mid_window + q1_window + q3_window))
 
@@ -58,9 +55,9 @@ def _chop_blob(blob_inv, blob_x, blob_y, ah):
     if not cuts:
         return [(blob_x, blob_y, blob_x + w, blob_y + h)]
 
-    cut_xs = [0] + cuts + [w]
+    cut_xs= [0] + cuts + [w]
     result = []
-    start  = 0
+    start = 0
 
     while start < w:
         best_end = (_best_cut(cut_xs, start, w, min_cw, ah, relaxed=False)

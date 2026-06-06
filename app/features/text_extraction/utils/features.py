@@ -32,21 +32,21 @@ def _outline_features(norm_img):
     if not contours:
         return np.zeros(parameters["features"]["outline_samples"] * 3 + parameters["features"]["outline_samples"] * 3, dtype=np.float32)
 
-    outer   = max(contours, key=lambda c: len(c))
-    inners  = [c for c in contours if cv2.contourArea(c) < cv2.contourArea(outer) and len(c) >= 2]
-    inner   = max(inners, key=lambda c: len(c)) if inners else None
+    outer = max(contours, key=lambda c: len(c))
+    inners = [c for c in contours if cv2.contourArea(c) < cv2.contourArea(outer) and len(c) >= 2]
+    inner = max(inners, key=lambda c: len(c)) if inners else None
 
     def sample_contour(contour):
-        total   = len(contour)
+        total = len(contour)
         indices = np.linspace(0, total - 1, parameters["features"]["outline_samples"], dtype=int)
         sampled = contour[indices].reshape(-1, 2).astype(np.float32)
-        nx      = sampled[:, 0] / (parameters["features"]["norm_size"] - 1)
-        ny      = sampled[:, 1] / (parameters["features"]["norm_size"] - 1)
+        nx = sampled[:, 0] / (parameters["features"]["norm_size"] - 1)
+        ny = sampled[:, 1] / (parameters["features"]["norm_size"] - 1)
         next_idx = (indices + 1) % total
-        nextp    = contour[next_idx].reshape(-1, 2).astype(np.float32)
-        dx       = nextp[:, 0] - sampled[:, 0]
-        dy       = nextp[:, 1] - sampled[:, 1]
-        angles   = np.arctan2(dy, dx)
+        nextp = contour[next_idx].reshape(-1, 2).astype(np.float32)
+        dx = nextp[:, 0] - sampled[:, 0]
+        dy = nextp[:, 1] - sampled[:, 1]
+        angles = np.arctan2(dy, dx)
         dir_norm = (angles + np.pi) / (2 * np.pi)
         return np.concatenate([nx, ny, dir_norm]).astype(np.float32)
 
@@ -56,9 +56,9 @@ def _outline_features(norm_img):
     return np.concatenate([outer_feat, inner_feat]).astype(np.float32)
 
 def _grid_features(norm_img):
-    inv      = (norm_img < 128).astype(np.float32)
-    cell_h   = parameters["features"]["norm_size"] // parameters["features"]["grid_rows"]
-    cell_w   = parameters["features"]["norm_size"] // parameters["features"]["grid_cols"]
+    inv = (norm_img < 128).astype(np.float32)
+    cell_h = parameters["features"]["norm_size"] // parameters["features"]["grid_rows"]
+    cell_w = parameters["features"]["norm_size"] // parameters["features"]["grid_cols"]
     features = np.zeros(parameters["features"]["grid_rows"] * parameters["features"]["grid_cols"], dtype=np.float32)
 
     for r in range(parameters["features"]["grid_rows"]):
@@ -70,53 +70,51 @@ def _grid_features(norm_img):
     return features
 
 def _direction_histogram(skel_img):
-    sobelx    = cv2.Sobel(skel_img, cv2.CV_32F, 1, 0, ksize=3)
-    sobely    = cv2.Sobel(skel_img, cv2.CV_32F, 0, 1, ksize=3)
+    sobelx = cv2.Sobel(skel_img, cv2.CV_32F, 1, 0, ksize=3)
+    sobely = cv2.Sobel(skel_img, cv2.CV_32F, 0, 1, ksize=3)
     magnitude = np.sqrt(sobelx ** 2 + sobely ** 2)
-    angles    = np.arctan2(sobely, sobelx)
+    angles = np.arctan2(sobely, sobelx)
 
-    mask      = magnitude >= 5.0
-    flat_a    = angles[mask]
-    flat_m    = magnitude[mask]
+    mask = magnitude >= 5.0
+    flat_a = angles[mask]
+    flat_m = magnitude[mask]
 
-    bins      = np.linspace(-np.pi, np.pi, parameters["features"]["direction_bins"] + 1)
-    hist, _   = np.histogram(flat_a, bins=bins, weights=flat_m)
-    total     = hist.sum()
+    bins = np.linspace(-np.pi, np.pi, parameters["features"]["direction_bins"] + 1)
+    hist, _ = np.histogram(flat_a, bins=bins, weights=flat_m)
+    total = hist.sum()
     if total > 0:
         hist = hist / total
 
     return hist.astype(np.float32)
 
 def _projection_profiles(norm_img):
-    inv          = (norm_img < 128).astype(np.float32)
-    h_profile    = inv.sum(axis=1).astype(np.float32)
-    v_profile    = inv.sum(axis=0).astype(np.float32)
-
-    h_resampled  = cv2.resize(h_profile.reshape(1, -1), (parameters["features"]["profile_bins"], 1), interpolation=cv2.INTER_AREA).flatten()
-    v_resampled  = cv2.resize(v_profile.reshape(1, -1), (parameters["features"]["profile_bins"], 1), interpolation=cv2.INTER_AREA).flatten()
-
-    h_norm       = h_resampled / (h_resampled.max() + 1e-8)
-    v_norm       = v_resampled / (v_resampled.max() + 1e-8)
+    inv = (norm_img < 128).astype(np.float32)
+    h_profile = inv.sum(axis=1).astype(np.float32)
+    v_profile = inv.sum(axis=0).astype(np.float32)
+    h_resampled = cv2.resize(h_profile.reshape(1, -1), (parameters["features"]["profile_bins"], 1), interpolation=cv2.INTER_AREA).flatten()
+    v_resampled = cv2.resize(v_profile.reshape(1, -1), (parameters["features"]["profile_bins"], 1), interpolation=cv2.INTER_AREA).flatten()
+    h_norm = h_resampled / (h_resampled.max() + 1e-8)
+    v_norm = v_resampled / (v_resampled.max() + 1e-8)
 
     return np.concatenate([h_norm, v_norm]).astype(np.float32)
 
 def _topology_features(norm_img):
-    inv          = (norm_img < 128).astype(np.uint8) * 255
+    inv = (norm_img < 128).astype(np.uint8) * 255
     contours, _  = cv2.findContours(inv, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    n_holes      = max(0, len(contours) - 1)
+    n_holes = max(0, len(contours) - 1)
 
-    euler        = cv2.morphologyEx(inv, cv2.MORPH_GRADIENT, np.ones((3, 3), np.uint8))
-    euler_norm   = float(euler.sum()) / (parameters["features"]["norm_size"] * parameters["features"]["norm_size"] * 255.0)
+    euler = cv2.morphologyEx(inv, cv2.MORPH_GRADIENT, np.ones((3, 3), np.uint8))
+    euler_norm = float(euler.sum()) / (parameters["features"]["norm_size"] * parameters["features"]["norm_size"] * 255.0)
 
     return np.array([min(n_holes, 5) / 5.0, euler_norm], dtype=np.float32)
 
 def extract(char_img):
-    norm     = normalise(char_img)
-    skel     = skeletonise(norm)
+    norm = normalise(char_img)
+    skel = skeletonise(norm)
     skel_inv = cv2.bitwise_not(skel)
 
     outline  = _outline_features(norm)
-    grid     = _grid_features(skel_inv)
+    grid = _grid_features(skel_inv)
     dir_hist = _direction_histogram(skel_inv)
     profiles = _projection_profiles(skel_inv)
     topology = _topology_features(norm)

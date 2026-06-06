@@ -15,8 +15,8 @@ def main():
         image_id = f"c{img_idx + 1:03d}"
         if not os.path.exists(f"data/test/old-books/images/{image_id}.tiff"):
             continue
-        img      = cv2.imread(f"data/test/old-books/images/{image_id}.tiff")
-        frames   = extract(img)
+        img = cv2.imread(f"data/test/old-books/images/{image_id}.tiff")
+        frames = extract(img)
 
         all_char_entries  = []
         all_word_line_map = {}
