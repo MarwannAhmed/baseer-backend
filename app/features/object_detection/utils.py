@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def compute_iou(box1, box2):
     x_left = max(box1[0], box2[0])
     y_top = max(box1[1], box2[1])
@@ -23,6 +24,7 @@ def compute_iou(box1, box2):
 
     return intersection_area / union_area
 
+
 def non_maximum_suppression(boxes, scores, labels, iou_threshold=0.3):
     if not boxes:
         return [], [], []
@@ -43,10 +45,12 @@ def non_maximum_suppression(boxes, scores, labels, iou_threshold=0.3):
 
         remaining_indices = sorted_indices[1:]
 
-        ious = np.array([
-            compute_iou(boxes[best_index], boxes[index])
-            for index in remaining_indices
-        ])
+        ious = np.array(
+            [
+                compute_iou(boxes[best_index], boxes[index])
+                for index in remaining_indices
+            ]
+        )
 
         sorted_indices = remaining_indices[ious < iou_threshold]
 
