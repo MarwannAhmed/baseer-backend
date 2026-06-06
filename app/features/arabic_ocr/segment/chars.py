@@ -112,7 +112,7 @@ def _segment_chars_impl(paw_binary, paw_x, paw_y, ah):
             it += 1
 
         # If we still have too many fragments, merge the smallest gaps until the PAW has a reasonable number of character boxes
-        max_segments = max(2, int(round(w / max(1.0, 0.9 * ah))))
+        max_segments = max(2, int(round(width / max(1.0, 0.9 * ah))))
         if len(repaired) > max_segments:
             repaired = sorted(repaired, key=lambda t: t[0])
             while len(repaired) > max_segments:
@@ -188,12 +188,12 @@ def _segment_chars_impl(paw_binary, paw_x, paw_y, ah):
             return repaired
 
         # If repair failed, fallback to whole PAW
-        return [(paw_x, paw_y, paw_x + w, paw_y + h)]
+        return [(paw_x, paw_y, paw_x + width, paw_y + height)]
 
     except Exception:
         logger.exception("segment_chars failed, returning full PAW")
-        h, w = paw_binary.shape
-        return [(paw_x, paw_y, paw_x + w, paw_y + h)]
+        height, width = paw_binary.shape
+        return [(paw_x, paw_y, paw_x + width, paw_y + height)]
 
 
 def segment_chars(paw_binary, paw_x, paw_y, ah):
@@ -205,11 +205,11 @@ def _valid_char(crop, ah):
         return False
     #counts rows that actually contain ink
     tight_h = int(np.sum(np.any(crop == 0, axis=1)))
-    _, w = crop.shape
+    _, width = crop.shape
     area = int(np.sum(crop == 0))
     return (
         AH_HEIGHT_MIN * ah <= tight_h <= AH_HEIGHT_MAX * ah and
-        MIN_CHAR_WIDTH * ah <= w <= MAX_CHAR_WIDTH * ah and
+        MIN_CHAR_WIDTH * ah <= width <= MAX_CHAR_WIDTH * ah and
         area >= AH_AREA_MIN * ah * ah
     )
 
