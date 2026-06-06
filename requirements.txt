@@ -20,3 +20,11 @@ paddleocr==3.4.0
 paddlepaddle==3.2.2
 gunicorn
 azure-storage-blob
+pandas
+matplotlib
+onnx
+onnxruntime
+timm
+pyyaml
+ultralytics
+tqdm
