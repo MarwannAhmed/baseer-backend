@@ -14,7 +14,6 @@ KNOWN_COLORS = {
 
 VIDEO_EXTENSIONS = {'.mp4', '.mov', '.avi', '.mkv', '.m4v', '.3gp', '.wmv'}
 
-# Resize every saved crop to this — standard input size for classifiers
 CROP_SIZE = 224
 
 def parse_label(filename):
@@ -29,8 +28,8 @@ def extract_frames(video_path: Path, n: int) -> list:
         print(f"Cannot open {video_path.name}")
         return []
 
-    total    = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps      = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
     duration = total / fps
 
     if total < 1:
@@ -48,7 +47,6 @@ def extract_frames(video_path: Path, n: int) -> list:
             frames.append(frame)
 
     cap.release()
-    print(f"  {len(frames)} frames  |  {total} total frames  |  {duration:.1f}s @ {fps:.0f}fps")
     return frames
 
 
@@ -65,19 +63,17 @@ def select_roi(first_frame, label):
     banner_h = 45
     banner = np.zeros((banner_h, disp_w, 3), dtype=np.uint8)
     msg = f"[{label}]  Draw box around object  |  SPACE/ENTER = confirm  |  C = full frame"
-    cv2.putText(banner, msg, (8, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.52, (255, 255, 255), 1, cv2.LINE_AA)
+    cv2.putText(banner, msg, (8, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (255, 255, 255), 1, cv2.LINE_AA)
     display_with_banner = np.vstack([banner, display])
 
-    roi = cv2.selectROI(f"ROI selection — {label}", display_with_banner,
-                        fromCenter=False, showCrosshair=True)
+    roi = cv2.selectROI(f"ROI selection {label}", display_with_banner, fromCenter=False, showCrosshair=True)
     cv2.destroyAllWindows()
 
     rx, ry, rw, rh = roi
     ry -= banner_h        
 
     if rw < 5 or rh < 5:
-        print("No ROI drawn → using full frame")
+        print("No ROI drawn, using full frame")
         return (0, 0, orig_width, orig_height)
 
     if scale < 1.0:
@@ -106,19 +102,17 @@ def build_dataset(videos_dir, output_dir, n_frames):
         print(f"[Error] No video files found in: {videos_dir}")
         sys.exit(1)
 
-    print(f"\nFound {len(video_files)} video(s):\n")
+    print(f"Found {len(video_files)} videos:\n")
     for f in video_files:
         lbl  = parse_label(f.name)
-        warn = "" if lbl in KNOWN_COLORS else "  ⚠  not in the 11 known colors"
+        warn = "" if lbl in KNOWN_COLORS else "not in the 11 known colors"
         print(f"  {f.name:<35} →  label: '{lbl}'{warn}")
 
     unknown = [parse_label(f.name) for f in video_files
                if parse_label(f.name) not in KNOWN_COLORS]
     if unknown:
-        print(f"\n  ⚠  Labels not matching the app's 11 colors: {set(unknown)}")
-        print(f"     Known colors: {sorted(KNOWN_COLORS)}")
-        print(f"     Rename the video files if this is a mistake, or continue anyway.")
-        ans = input("\n  Continue? [y/N] ").strip().lower()
+        print(f"Labels not matching the app's 11 colors: {set(unknown)}")
+        ans = input("Continue? [y/N] ").strip().lower()
         if ans != 'y':
             sys.exit(0)
 
@@ -133,7 +127,7 @@ def build_dataset(videos_dir, output_dir, n_frames):
 
         frames = extract_frames(video_path, n_frames)
         if not frames:
-            print("  Skipping — could not read any frames\n")
+            print("  Skipping, could not read any frames\n")
             continue
 
         roi = select_roi(frames[0], label)
@@ -159,31 +153,19 @@ def build_dataset(videos_dir, output_dir, n_frames):
             label_counts[label] += 1
             saved += 1
 
-        print(f"  Saved {saved} crops → {label_dir.name}/\n")
-
     csv_path = output_dir / "labels.csv"
     with open(csv_path, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow(['image_path', 'label'])
         writer.writerows(records)
 
-    print("=" * 50)
-    print(f"Total:  {len(records)} samples  |  {len(label_counts)} classes")
+    print(f"Total: {len(records)} samples, {len(label_counts)} classes")
     print(f"Folder: {output_dir.resolve()}")
-    print(f"CSV:    {csv_path.resolve()}\n")
-
-    max_count = max(label_counts.values(), default=1)
-    print("Samples per class:")
-    for lbl, cnt in sorted(label_counts.items()):
-        bar   = "█" * int(cnt / max_count * 30)
-        check = "✓" if lbl in KNOWN_COLORS else "?"
-        print(f"  {check} {lbl:<14}  {cnt:>3}  {bar}")
+    print(f"CSV: {csv_path.resolve()}\n")
 
     missing = KNOWN_COLORS - set(label_counts.keys())
     if missing:
-        print(f"\n  Missing classes: {sorted(missing)}")
-
-# ── Entry point ────────────────────────────────────────────────────────────────
+        print(f"Missing classes: {sorted(missing)}")
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(
