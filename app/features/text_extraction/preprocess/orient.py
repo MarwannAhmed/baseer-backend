@@ -27,10 +27,10 @@ def orient(binary):
         small = binary.copy()
     
     coarse_angles = range(-90, 91, parameters["orient"]["course_step"])
-    best          = max(coarse_angles, key=lambda a: _score(small, a))
+    best = max(coarse_angles, key=lambda a: _score(small, a))
 
-    fine_angles   = np.arange(best - parameters["orient"]["fine_range"], best + parameters["orient"]["fine_range"] + parameters["orient"]["fine_step"], parameters["orient"]["fine_step"])
-    best          = float(max(fine_angles, key=lambda a: _score(small, a)))
+    fine_angles = np.arange(best - parameters["orient"]["fine_range"], best + parameters["orient"]["fine_range"] + parameters["orient"]["fine_step"], parameters["orient"]["fine_step"])
+    best = float(max(fine_angles, key=lambda a: _score(small, a)))
 
     if abs(best) < 0.5:
         return binary, 0.0
