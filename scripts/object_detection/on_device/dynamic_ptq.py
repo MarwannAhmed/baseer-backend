@@ -17,9 +17,9 @@ Path("results").mkdir(exist_ok=True)
 IMAGE_SIZE = 640
 SPEED_RUNS = 20
 
-non_optimised_pt_path = Path("models/backbone_mobilenetv2.pt")
-non_optimised_onnx_path = Path("models/backbone_mobilenetv2.onnx")
-optimised_onnx_path = Path("models/backbone_mobilenetv2_int8.onnx")
+non_optimised_pt_path = Path("models_data/backbone_mobilenetv2.pt")
+non_optimised_onnx_path = Path("models_data/backbone_mobilenetv2.onnx")
+optimised_onnx_path = Path("models_data/backbone_mobilenetv2_int8.onnx")
 
 if not non_optimised_pt_path.exists():
     print("Original non-optimised PT format model not found.")
@@ -168,6 +168,8 @@ print(f"Non-optimised ONNX size: {non_optimised_size:.1f} MB")
 print(f"Optimised ONNX size: {optimised_size:.1f} MB")
 print(f"Size reduction: {non_optimised_size / optimised_size:.1f}x smaller")
 
+test_image = "test_image.jpg"
+
 
 def onnx_speed_test(onnx_path: str, test_image_path: str, speed_runs: int = SPEED_RUNS):
     session_options = ort.SessionOptions()
@@ -193,8 +195,6 @@ def onnx_speed_test(onnx_path: str, test_image_path: str, speed_runs: int = SPEE
 
     return sum(times) / len(times)
 
-
-test_image = "test_image.jpg"
 
 non_optimised_inference = onnx_speed_test(str(non_optimised_onnx_path), test_image)
 print(
