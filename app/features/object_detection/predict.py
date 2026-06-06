@@ -25,13 +25,9 @@ def load_models():
 
     return models, class_labels
 
-models = None
-class_labels = None
+models, class_labels = load_models()
 
 def detect_objects(image, confidence_threshold=0.85):
-    global models, class_labels
-    if models is None or class_labels is None:
-        models, class_labels = load_models()
     name_index_map = {name: index for index, name in enumerate(class_labels)}
     
     # region proposals using selective search
